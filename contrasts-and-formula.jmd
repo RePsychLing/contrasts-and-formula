@@ -14,6 +14,7 @@ For instance, let's look at the KB07 dataset:
 ```julia
 using DataFrames, DataFramesMeta
 using MixedModels, GLM
+using LinearAlgebra
 
 kb07 = MixedModels.dataset(:kb07)
 first(kb07, 5)
@@ -163,13 +164,25 @@ prec_old = (levels .== "old-break") .- (levels .== "old-maintain")
 prec_new = (levels .== "new-break") .- (levels .== "new-maintain")
 old_new = (abs.(prec_old) .- abs.(prec_new)) ./ 2
 
-hypotheses = Matrix(hcat(old_new, prec_old, prec_new)')
+contr_hyp = HypothesisCoding(Matrix(hcat(old_new, prec_old, prec_new)'),
+                             labels=["old", "(old) break", "(new) break"])
+contr_hyp.hypotheses
 ```
 
+These hypotheses correspond to the following *contrasts* (using the
+[`rationalize`](https://docs.julialang.org/en/v1/base/math/#Base.rationalize)
+function to make pretty fractions, like the `fractions` function in R):
+
 ```julia
-contr_hyp = Dict(:spkr_prec => HypothesisCoding(hypotheses,
-                                                labels=["old", "(old) break", "(new) break"]))
-mod5 = fit(MixedModel, f2, kb07ex, contrasts = contr_hyp)
+rationalize.(contr_hyp.contrasts, tol=1e-10)
+```
+
+Notice how the ±1 coding in the hypotheses (which translates into the difference
+between the mean response in those cells) is transformed into ±½ coding in the
+contrasts.
+
+```julia
+mod5 = fit(MixedModel, f2, kb07ex, contrasts = Dict(:spkr_prec => contr_hyp))
 ```
 
 Note that this is equivalent to the `/` "nesting" syntax using `EffectsCoding`,

@@ -670,6 +670,7 @@ div.title {text-align: center;}
 <pre class='hljl'>
 <span class='hljl-k'>using</span><span class='hljl-t'> </span><span class='hljl-n'>DataFrames</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>DataFramesMeta</span><span class='hljl-t'>
 </span><span class='hljl-k'>using</span><span class='hljl-t'> </span><span class='hljl-n'>MixedModels</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>GLM</span><span class='hljl-t'>
+</span><span class='hljl-k'>using</span><span class='hljl-t'> </span><span class='hljl-n'>LinearAlgebra</span><span class='hljl-t'>
 
 </span><span class='hljl-n'>kb07</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>MixedModels</span><span class='hljl-oB'>.</span><span class='hljl-nf'>dataset</span><span class='hljl-p'>(</span><span class='hljl-sc'>:kb07</span><span class='hljl-p'>)</span><span class='hljl-t'>
 </span><span class='hljl-nf'>first</span><span class='hljl-p'>(</span><span class='hljl-n'>kb07</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-ni'>5</span><span class='hljl-p'>)</span>
@@ -919,7 +920,9 @@ spkr_prec: old-maintain  -530.131    54.4839    -9.73   &lt;1e-21
 </span><span class='hljl-n'>prec_new</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-p'>(</span><span class='hljl-n'>levels</span><span class='hljl-t'> </span><span class='hljl-oB'>.==</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;new-break&quot;</span><span class='hljl-p'>)</span><span class='hljl-t'> </span><span class='hljl-oB'>.-</span><span class='hljl-t'> </span><span class='hljl-p'>(</span><span class='hljl-n'>levels</span><span class='hljl-t'> </span><span class='hljl-oB'>.==</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;new-maintain&quot;</span><span class='hljl-p'>)</span><span class='hljl-t'>
 </span><span class='hljl-n'>old_new</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-p'>(</span><span class='hljl-n'>abs</span><span class='hljl-oB'>.</span><span class='hljl-p'>(</span><span class='hljl-n'>prec_old</span><span class='hljl-p'>)</span><span class='hljl-t'> </span><span class='hljl-oB'>.-</span><span class='hljl-t'> </span><span class='hljl-n'>abs</span><span class='hljl-oB'>.</span><span class='hljl-p'>(</span><span class='hljl-n'>prec_new</span><span class='hljl-p'>))</span><span class='hljl-t'> </span><span class='hljl-oB'>./</span><span class='hljl-t'> </span><span class='hljl-ni'>2</span><span class='hljl-t'>
 
-</span><span class='hljl-n'>hypotheses</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>Matrix</span><span class='hljl-p'>(</span><span class='hljl-nf'>hcat</span><span class='hljl-p'>(</span><span class='hljl-n'>old_new</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>prec_old</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>prec_new</span><span class='hljl-p'>)</span><span class='hljl-oB'>&#39;</span><span class='hljl-p'>)</span>
+</span><span class='hljl-n'>contr_hyp</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>HypothesisCoding</span><span class='hljl-p'>(</span><span class='hljl-nf'>Matrix</span><span class='hljl-p'>(</span><span class='hljl-nf'>hcat</span><span class='hljl-p'>(</span><span class='hljl-n'>old_new</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>prec_old</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>prec_new</span><span class='hljl-p'>)</span><span class='hljl-oB'>&#39;</span><span class='hljl-p'>),</span><span class='hljl-t'>
+                             </span><span class='hljl-n'>labels</span><span class='hljl-oB'>=</span><span class='hljl-p'>[</span><span class='hljl-s'>&quot;old&quot;</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;(old) break&quot;</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;(new) break&quot;</span><span class='hljl-p'>])</span><span class='hljl-t'>
+</span><span class='hljl-n'>contr_hyp</span><span class='hljl-oB'>.</span><span class='hljl-n'>hypotheses</span>
 </pre>
 
 
@@ -931,11 +934,28 @@ spkr_prec: old-maintain  -530.131    54.4839    -9.73   &lt;1e-21
 </pre>
 
 
+<p>These hypotheses correspond to the following <em>contrasts</em> &#40;using the <a href="https://docs.julialang.org/en/v1/base/math/#Base.rationalize"><code>rationalize</code></a> function to make pretty fractions, like the <code>fractions</code> function in R&#41;:</p>
+
 
 <pre class='hljl'>
-<span class='hljl-n'>contr_hyp</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>Dict</span><span class='hljl-p'>(</span><span class='hljl-sc'>:spkr_prec</span><span class='hljl-t'> </span><span class='hljl-oB'>=&gt;</span><span class='hljl-t'> </span><span class='hljl-nf'>HypothesisCoding</span><span class='hljl-p'>(</span><span class='hljl-n'>hypotheses</span><span class='hljl-p'>,</span><span class='hljl-t'>
-                                                </span><span class='hljl-n'>labels</span><span class='hljl-oB'>=</span><span class='hljl-p'>[</span><span class='hljl-s'>&quot;old&quot;</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;(old) break&quot;</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;(new) break&quot;</span><span class='hljl-p'>]))</span><span class='hljl-t'>
-</span><span class='hljl-n'>mod5</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>fit</span><span class='hljl-p'>(</span><span class='hljl-n'>MixedModel</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>f2</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>kb07ex</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>contrasts</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>contr_hyp</span><span class='hljl-p'>)</span>
+<span class='hljl-n'>rationalize</span><span class='hljl-oB'>.</span><span class='hljl-p'>(</span><span class='hljl-n'>contr_hyp</span><span class='hljl-oB'>.</span><span class='hljl-n'>contrasts</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>tol</span><span class='hljl-oB'>=</span><span class='hljl-nfB'>1e-10</span><span class='hljl-p'>)</span>
+</pre>
+
+
+<pre class="output">
+4×3 Array&#123;Rational&#123;Int64&#125;,2&#125;:
+ -1//2   0//1   1//2
+ -1//2   0//1  -1//2
+  1//2   1//2   0//1
+  1//2  -1//2   0//1
+</pre>
+
+
+<p>Notice how the ±1 coding in the hypotheses &#40;which translates into the difference between the mean response in those cells&#41; is transformed into ±½ coding in the contrasts.</p>
+
+
+<pre class='hljl'>
+<span class='hljl-n'>mod5</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>fit</span><span class='hljl-p'>(</span><span class='hljl-n'>MixedModel</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>f2</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>kb07ex</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>contrasts</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>Dict</span><span class='hljl-p'>(</span><span class='hljl-sc'>:spkr_prec</span><span class='hljl-t'> </span><span class='hljl-oB'>=&gt;</span><span class='hljl-t'> </span><span class='hljl-n'>contr_hyp</span><span class='hljl-p'>))</span>
 </pre>
 
 
