@@ -271,7 +271,7 @@ mod3 = fit(MixedModel, f, kb07, contrasts=contr_manual)
 :RESULTS:
 : ┌ Warning: `ContrastsCoding(contrasts)` is deprecated and will not be exported in the future, use `HypothesisCoding(pinv(contrasts))` instead.
 : │   caller = #ContrastsCoding#8 at contrasts.jl:526 [inlined]
-: └ @ Core /home/dave/.julia/dev/StatsModels/src/contrasts.jl:526
+: └ @ Core /home/dave/.julia/packages/StatsModels/NakzS/src/contrasts.jl:526
 #+begin_example
   Linear mixed model fit by maximum likelihood
    rt_trunc ~ 1 + spkr + prec + spkr & prec + (1 | subj)
