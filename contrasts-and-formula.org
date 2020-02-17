@@ -1,0 +1,170 @@
+#+TITLE: Contrasts and @formula in StatsModels.jl
+
+
+* Contrast coding
+  :PROPERTIES:
+  :header-args: :async yes :kernel julia-1.3 :session jl-contrasts :display text/plain text/html
+  :END:
+
+** What and why?
+
+To fit any kind of statistical model you need some kind of /numerical
+representation/ of your data.  Data often comes in a /table/, a named collection
+of variables of different types of data.  Some of that data is "continuous", or
+basically numeric.  But often our data is not numeric (or continuous), but
+"categorical", having a finite number of distinct levels.
+
+For instance, let's look at the KB07 dataset:
+
+#+begin_src jupyter-julia
+  using DataFrames, MixedModels, GLM
+
+  kb07 = MixedModels.dataset(:kb07)
+
+#+end_src
+
+#+RESULTS:
+#+begin_example
+  1789×7 DataFrame
+  │ Row  │ subj   │ item   │ spkr   │ prec     │ load   │ rt_trunc │ rt_raw │
+  │      │ [90mString[39m │ [90mString[39m │ [90mString[39m │ [90mString[39m   │ [90mString[39m │ [90mInt16[39m    │ [90mInt16[39m  │
+  ├──────┼────────┼────────┼────────┼──────────┼────────┼──────────┼────────┤
+  │ 1    │ S030   │ I01    │ new    │ break    │ yes    │ 2267     │ 2267   │
+  │ 2    │ S030   │ I02    │ old    │ maintain │ no     │ 3856     │ 3856   │
+  │ 3    │ S030   │ I03    │ old    │ break    │ no     │ 1567     │ 1567   │
+  │ 4    │ S030   │ I04    │ new    │ maintain │ no     │ 1732     │ 1732   │
+  │ 5    │ S030   │ I05    │ new    │ break    │ no     │ 2660     │ 2660   │
+  │ 6    │ S030   │ I06    │ old    │ maintain │ yes    │ 2763     │ 2763   │
+  │ 7    │ S030   │ I07    │ old    │ break    │ yes    │ 3528     │ 3528   │
+  │ 8    │ S030   │ I08    │ new    │ maintain │ yes    │ 1741     │ 1741   │
+  │ 9    │ S030   │ I09    │ new    │ break    │ yes    │ 3692     │ 3692   │
+  │ 10   │ S030   │ I10    │ old    │ maintain │ no     │ 1949     │ 1949   │
+  ⋮
+  │ 1779 │ S103   │ I22    │ new    │ break    │ no     │ 1623     │ 1623   │
+  │ 1780 │ S103   │ I23    │ old    │ maintain │ yes    │ 2706     │ 2706   │
+  │ 1781 │ S103   │ I24    │ old    │ break    │ yes    │ 4281     │ 4281   │
+  │ 1782 │ S103   │ I25    │ new    │ maintain │ yes    │ 2075     │ 2075   │
+  │ 1783 │ S103   │ I26    │ new    │ break    │ yes    │ 3179     │ 3179   │
+  │ 1784 │ S103   │ I27    │ old    │ maintain │ no     │ 1216     │ 1216   │
+  │ 1785 │ S103   │ I28    │ old    │ break    │ no     │ 2286     │ 2286   │
+  │ 1786 │ S103   │ I29    │ new    │ maintain │ no     │ 1202     │ 1202   │
+  │ 1787 │ S103   │ I30    │ new    │ break    │ no     │ 1581     │ 1581   │
+  │ 1788 │ S103   │ I31    │ old    │ maintain │ yes    │ 1601     │ 1601   │
+  │ 1789 │ S103   │ I32    │ old    │ break    │ yes    │ 1941     │ 1941   │
+#+end_example
+
+Here ~:spkr~, ~:prec~, and ~:load~ are categortical variables, each of which
+takes on two different values.  If we fit a regression using this dataset, we
+end up with predictors that refer to specific levels:
+
+#+begin_src jupyter-julia
+  f = @formula(rt_trunc ~ 1 + spkr + prec + spkr&prec + (1 | subj))
+  mod = fit(MixedModel, f, kb07)
+#+end_src
+
+#+RESULTS:
+#+begin_example
+  Linear mixed model fit by maximum likelihood
+   rt_trunc ~ 1 + spkr + prec + spkr & prec + (1 | subj)
+       logLik        -2 logLik          AIC             BIC       
+   -1.45767208×10⁴  2.91534417×10⁴  2.91654417×10⁴  2.91983781×10⁴
+
+  Variance components:
+              Column    Variance  Std.Dev. 
+  subj     (Intercept)   95885.39 309.65366
+  Residual              662657.47 814.03776
+   Number of obs: 1789; levels of grouping factors: 56
+
+    Fixed-effects parameters:
+  ──────────────────────────────────────────────────────────────────
+                               Estimate  Std.Error  z value  P(>|z|)
+  ──────────────────────────────────────────────────────────────────
+  (Intercept)                 2425.32      56.5224    42.91   <1e-99
+  spkr: old                    179.992     54.4214     3.31   0.0009
+  prec: maintain              -623.347     54.4214   -11.45   <1e-29
+  spkr: old & prec: maintain   -86.7763    76.9856    -1.13   0.2597
+  ──────────────────────────────────────────────────────────────────
+#+end_example
+
+Let's look at a few rows of the fixed effects design matrix that's generated for
+this model:
+
+#+begin_src jupyter-julia
+  Int.(mod.X)[1:5, :]
+#+end_src
+
+#+RESULTS:
+: 5×4 Array{Int64,2}:
+:  1  0  0  0
+:  1  1  1  1
+:  1  1  0  0
+:  1  0  1  0
+:  1  0  0  0
+
+A few things to note: all the values are 0 or 1, and there's one column of all
+1s at the start (that's the ~(Intercept)~ term).  Columns 2 and 3 correspond to
+~spkr~ and ~prec~: there's a 0 where ~spkr == "new"~ and a 1 for ~"old"~.
+Note that the coefficient name for this column is ~spkr: old~, which indicates
+that this predictor indicates the presence of "old", relative to the (implicit)
+baseline of "new".  Similarly for ~prec: maintain~.
+
+The last column is the interaction term ~spkr&prec~, and it's the elementwise
+product of the columns for ~spkr: new~ and ~pred: maintain~.
+
+#+begin_src jupyter-julia
+  kb07[1:5, :]
+#+end_src
+
+#+RESULTS:
+: 5×7 DataFrame
+: │ Row │ subj   │ item   │ spkr   │ prec     │ load   │ rt_trunc │ rt_raw │
+: │     │ [90mString[39m │ [90mString[39m │ [90mString[39m │ [90mString[39m   │ [90mString[39m │ [90mInt16[39m    │ [90mInt16[39m  │
+: ├─────┼────────┼────────┼────────┼──────────┼────────┼──────────┼────────┤
+: │ 1   │ S030   │ I01    │ new    │ break    │ yes    │ 2267     │ 2267   │
+: │ 2   │ S030   │ I02    │ old    │ maintain │ no     │ 3856     │ 3856   │
+: │ 3   │ S030   │ I03    │ old    │ break    │ no     │ 1567     │ 1567   │
+: │ 4   │ S030   │ I04    │ new    │ maintain │ no     │ 1732     │ 1732   │
+: │ 5   │ S030   │ I05    │ new    │ break    │ no     │ 2660     │ 2660   │
+
+** Controlling contrasts
+
+You can set your own contrasts via the ~contrasts=~ keyword argument in ~fit~.
+
+#+begin_src jupyter-julia
+  using StatsModels
+
+  contrasts = Dict(
+      :spkr => EffectsCoding(base = "old"),
+      :prec => DummyCoding(levels = ["maintain", "break"])
+  )
+
+  mod2 = fit(MixedModel, f, kb07, contrasts=contrasts)
+#+end_src
+
+#+RESULTS:
+#+begin_example
+  Linear mixed model fit by maximum likelihood
+   rt_trunc ~ 1 + spkr + prec + spkr & prec + (1 | subj)
+       logLik        -2 logLik          AIC             BIC       
+   -1.45767208×10⁴  2.91534417×10⁴  2.91654417×10⁴  2.91983781×10⁴
+
+  Variance components:
+              Column    Variance  Std.Dev. 
+  subj     (Intercept)   95885.39 309.65366
+  Residual              662657.47 814.03776
+   Number of obs: 1789; levels of grouping factors: 56
+
+    Fixed-effects parameters:
+  ───────────────────────────────────────────────────────────────
+                            Estimate  Std.Error  z value  P(>|z|)
+  ───────────────────────────────────────────────────────────────
+  (Intercept)              1848.58      49.5329    37.32   <1e-99
+  spkr: new                 -46.6081    27.2263    -1.71   0.0869
+  prec: break               666.735     38.4928    17.32   <1e-66
+  spkr: new & prec: break   -43.3882    38.4928    -1.13   0.2597
+  ───────────────────────────────────────────────────────────────
+#+end_example
+
+This example illustrates two ways to control the ordering of levels used to
+compute the contrasts: you can use ~base=~ to determine the baseline level, or
+~levels=~ to indicate all the levels that are used in the contrasts.
