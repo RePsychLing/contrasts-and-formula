@@ -168,6 +168,17 @@ hypotheses = Matrix(hcat(old_new, prec_old, prec_new)')
 
 ```julia
 contr_hyp = Dict(:spkr_prec => HypothesisCoding(hypotheses,
-                                                labels=["old", "(old) break", "(old) maint"]))
+                                                labels=["old", "(old) break", "(new) break"]))
 mod5 = fit(MixedModel, f2, kb07ex, contrasts = contr_hyp)
+```
+
+Note that this is equivalent to the `/` "nesting" syntax using `EffectsCoding`,
+after adjusting for the 2× factor from the +1/-1 coding:
+
+```julia
+mod6 = fit(MixedModel,
+           @formula(rt_trunc ~ 1 + spkr/prec + (1|subj)), 
+           kb07,
+           contrasts = Dict(:spkr => EffectsCoding(base="new"),
+                            :prec => EffectsCoding(base="maintain")))
 ```

@@ -934,7 +934,7 @@ spkr_prec: old-maintain  -530.131    54.4839    -9.73   &lt;1e-21
 
 <pre class='hljl'>
 <span class='hljl-n'>contr_hyp</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>Dict</span><span class='hljl-p'>(</span><span class='hljl-sc'>:spkr_prec</span><span class='hljl-t'> </span><span class='hljl-oB'>=&gt;</span><span class='hljl-t'> </span><span class='hljl-nf'>HypothesisCoding</span><span class='hljl-p'>(</span><span class='hljl-n'>hypotheses</span><span class='hljl-p'>,</span><span class='hljl-t'>
-                                                </span><span class='hljl-n'>labels</span><span class='hljl-oB'>=</span><span class='hljl-p'>[</span><span class='hljl-s'>&quot;old&quot;</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;(old) break&quot;</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;(old) maint&quot;</span><span class='hljl-p'>]))</span><span class='hljl-t'>
+                                                </span><span class='hljl-n'>labels</span><span class='hljl-oB'>=</span><span class='hljl-p'>[</span><span class='hljl-s'>&quot;old&quot;</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;(old) break&quot;</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;(new) break&quot;</span><span class='hljl-p'>]))</span><span class='hljl-t'>
 </span><span class='hljl-n'>mod5</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>fit</span><span class='hljl-p'>(</span><span class='hljl-n'>MixedModel</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>f2</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>kb07ex</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>contrasts</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>contr_hyp</span><span class='hljl-p'>)</span>
 </pre>
 
@@ -958,8 +958,44 @@ Residual              662657.47 814.03776
 &#40;Intercept&#41;             2181.94     45.6362    47.81   &lt;1e-99
 spkr_prec: old           136.604    38.4928     3.55   0.0004
 spkr_prec: &#40;old&#41; break   710.123    54.4527    13.04   &lt;1e-38
-spkr_prec: &#40;old&#41; maint   623.347    54.4214    11.45   &lt;1e-29
+spkr_prec: &#40;new&#41; break   623.347    54.4214    11.45   &lt;1e-29
 ─────────────────────────────────────────────────────────────
+</pre>
+
+
+<p>Note that this is equivalent to the <code>/</code> &quot;nesting&quot; syntax using <code>EffectsCoding</code>, after adjusting for the 2× factor from the &#43;1/-1 coding:</p>
+
+
+<pre class='hljl'>
+<span class='hljl-n'>mod6</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>fit</span><span class='hljl-p'>(</span><span class='hljl-n'>MixedModel</span><span class='hljl-p'>,</span><span class='hljl-t'>
+           </span><span class='hljl-nd'>@formula</span><span class='hljl-p'>(</span><span class='hljl-n'>rt_trunc</span><span class='hljl-t'> </span><span class='hljl-oB'>~</span><span class='hljl-t'> </span><span class='hljl-ni'>1</span><span class='hljl-t'> </span><span class='hljl-oB'>+</span><span class='hljl-t'> </span><span class='hljl-n'>spkr</span><span class='hljl-oB'>/</span><span class='hljl-n'>prec</span><span class='hljl-t'> </span><span class='hljl-oB'>+</span><span class='hljl-t'> </span><span class='hljl-p'>(</span><span class='hljl-ni'>1</span><span class='hljl-oB'>|</span><span class='hljl-n'>subj</span><span class='hljl-p'>)),</span><span class='hljl-t'> 
+           </span><span class='hljl-n'>kb07</span><span class='hljl-p'>,</span><span class='hljl-t'>
+           </span><span class='hljl-n'>contrasts</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>Dict</span><span class='hljl-p'>(</span><span class='hljl-sc'>:spkr</span><span class='hljl-t'> </span><span class='hljl-oB'>=&gt;</span><span class='hljl-t'> </span><span class='hljl-nf'>EffectsCoding</span><span class='hljl-p'>(</span><span class='hljl-n'>base</span><span class='hljl-oB'>=</span><span class='hljl-s'>&quot;new&quot;</span><span class='hljl-p'>),</span><span class='hljl-t'>
+                            </span><span class='hljl-sc'>:prec</span><span class='hljl-t'> </span><span class='hljl-oB'>=&gt;</span><span class='hljl-t'> </span><span class='hljl-nf'>EffectsCoding</span><span class='hljl-p'>(</span><span class='hljl-n'>base</span><span class='hljl-oB'>=</span><span class='hljl-s'>&quot;maintain&quot;</span><span class='hljl-p'>)))</span>
+</pre>
+
+
+<pre class="output">
+Linear mixed model fit by maximum likelihood
+ rt_trunc ~ 1 &#43; spkr &#43; spkr &amp; prec &#43; &#40;1 | subj&#41;
+     logLik        -2 logLik          AIC             BIC       
+ -1.45767208×10⁴  2.91534417×10⁴  2.91654417×10⁴  2.91983781×10⁴
+
+Variance components:
+            Column    Variance  Std.Dev. 
+subj     &#40;Intercept&#41;   95885.39 309.65366
+Residual              662657.47 814.03776
+ Number of obs: 1789; levels of grouping factors: 56
+
+  Fixed-effects parameters:
+───────────────────────────────────────────────────────────────
+                          Estimate  Std.Error  z value  P&#40;&gt;|z|&#41;
+───────────────────────────────────────────────────────────────
+&#40;Intercept&#41;              2181.94      45.6362    47.81   &lt;1e-99
+spkr: old                  68.3021    19.2464     3.55   0.0004
+spkr: new &amp; prec: break   311.673     27.2107    11.45   &lt;1e-29
+spkr: old &amp; prec: break   355.062     27.2263    13.04   &lt;1e-38
+───────────────────────────────────────────────────────────────
 </pre>
 
 
