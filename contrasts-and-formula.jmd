@@ -286,6 +286,7 @@ fit(MixedModel, f2, kb07ex, contrasts = Dict(:spkr_prec => contr_helm_hyp))
 minus the mean for that level, computed manually
 
 ```julia
+# (using join to make sure the levels are in the right order)
 lev_means = join(DataFrame(spkr_prec=levels),
                  by(kb07ex, :spkr_prec, mean_rt = :rt_trunc => mean),
                  on = :spkr_prec)
