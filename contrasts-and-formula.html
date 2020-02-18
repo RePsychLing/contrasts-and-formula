@@ -661,7 +661,9 @@ div.title {text-align: center;}
             
           </div>
 
-          <h1>Contrast coding</h1>
+          <hr />
+<p>title: A quick tour of StatsModels.jl subtitle: Contrast coding, <code>@formula</code>, and Terms author: Dave Kleinschmidt date: 18 February 2020 ...</p>
+<h1>Contrast coding</h1>
 <h2>What and why?</h2>
 <p>To fit any kind of statistical model you need some kind of <em>numerical representation</em> of your data. Data often comes in a <em>table</em>, a named collection of variables of different types of data. Some of that data is &quot;continuous&quot;, or basically numeric. But often our data is not numeric &#40;or continuous&#41;, but &quot;categorical&quot;, having a finite number of distinct levels.</p>
 <p>For instance, let&#39;s look at the KB07 dataset:</p>
@@ -670,7 +672,7 @@ div.title {text-align: center;}
 <pre class='hljl'>
 <span class='hljl-k'>using</span><span class='hljl-t'> </span><span class='hljl-n'>DataFrames</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>DataFramesMeta</span><span class='hljl-t'>
 </span><span class='hljl-k'>using</span><span class='hljl-t'> </span><span class='hljl-n'>MixedModels</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>GLM</span><span class='hljl-t'>
-</span><span class='hljl-k'>using</span><span class='hljl-t'> </span><span class='hljl-n'>LinearAlgebra</span><span class='hljl-t'>
+</span><span class='hljl-k'>using</span><span class='hljl-t'> </span><span class='hljl-n'>LinearAlgebra</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>Statistics</span><span class='hljl-t'>
 
 </span><span class='hljl-n'>kb07</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>MixedModels</span><span class='hljl-oB'>.</span><span class='hljl-nf'>dataset</span><span class='hljl-p'>(</span><span class='hljl-sc'>:kb07</span><span class='hljl-p'>)</span><span class='hljl-t'>
 </span><span class='hljl-nf'>first</span><span class='hljl-p'>(</span><span class='hljl-n'>kb07</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-ni'>5</span><span class='hljl-p'>)</span>
@@ -790,6 +792,78 @@ spkr: new &amp; prec: break   -43.3882    38.4928    -1.13   0.2597
 <li><p>you can use <code>levels&#61;</code> to indicate all the levels that are used in  the contrasts, the first of which is automatically set as the  baseline.</p>
 </li>
 </ol>
+<h3>Reversed Helmert coding</h3>
+<p>Let&#39;s say you want to use reverse Helmert coding.  It&#39;s easy using <code>reverse</code> to flip the order of the levels.  Here&#39;s the original:</p>
+
+
+<pre class='hljl'>
+<span class='hljl-n'>spkr_levels</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-p'>[</span><span class='hljl-s'>&quot;old&quot;</span><span class='hljl-p'>,</span><span class='hljl-s'>&quot;new&quot;</span><span class='hljl-p'>]</span><span class='hljl-t'>
+</span><span class='hljl-nf'>fit</span><span class='hljl-p'>(</span><span class='hljl-n'>MixedModel</span><span class='hljl-p'>,</span><span class='hljl-t'>
+    </span><span class='hljl-n'>f</span><span class='hljl-p'>,</span><span class='hljl-t'>
+    </span><span class='hljl-n'>kb07</span><span class='hljl-p'>,</span><span class='hljl-t'>
+    </span><span class='hljl-n'>contrasts</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>Dict</span><span class='hljl-p'>(</span><span class='hljl-sc'>:spkr</span><span class='hljl-t'> </span><span class='hljl-oB'>=&gt;</span><span class='hljl-t'> </span><span class='hljl-nf'>HelmertCoding</span><span class='hljl-p'>(</span><span class='hljl-n'>levels</span><span class='hljl-oB'>=</span><span class='hljl-n'>spkr_levels</span><span class='hljl-p'>)))</span>
+</pre>
+
+
+<pre class="output">
+Linear mixed model fit by maximum likelihood
+ rt_trunc ~ 1 &#43; spkr &#43; prec &#43; spkr &amp; prec &#43; &#40;1 | subj&#41;
+     logLik        -2 logLik          AIC             BIC       
+ -1.45767208×10⁴  2.91534417×10⁴  2.91654417×10⁴  2.91983781×10⁴
+
+Variance components:
+            Column    Variance  Std.Dev. 
+subj     &#40;Intercept&#41;   95885.39 309.65366
+Residual              662657.47 814.03776
+ Number of obs: 1789; levels of grouping factors: 56
+
+  Fixed-effects parameters:
+──────────────────────────────────────────────────────────────────
+                             Estimate  Std.Error  z value  P&#40;&gt;|z|&#41;
+──────────────────────────────────────────────────────────────────
+&#40;Intercept&#41;                 2515.31      49.5243    50.79   &lt;1e-99
+spkr: new                    -89.9962    27.2107    -3.31   0.0009
+prec: maintain              -666.735     38.4928   -17.32   &lt;1e-66
+spkr: new &amp; prec: maintain    43.3882    38.4928     1.13   0.2597
+──────────────────────────────────────────────────────────────────
+</pre>
+
+
+<p>And reversed:</p>
+
+
+<pre class='hljl'>
+<span class='hljl-nf'>fit</span><span class='hljl-p'>(</span><span class='hljl-n'>MixedModel</span><span class='hljl-p'>,</span><span class='hljl-t'>
+    </span><span class='hljl-n'>f</span><span class='hljl-p'>,</span><span class='hljl-t'>
+    </span><span class='hljl-n'>kb07</span><span class='hljl-p'>,</span><span class='hljl-t'>
+    </span><span class='hljl-n'>contrasts</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>Dict</span><span class='hljl-p'>(</span><span class='hljl-sc'>:spkr</span><span class='hljl-t'> </span><span class='hljl-oB'>=&gt;</span><span class='hljl-t'> </span><span class='hljl-nf'>HelmertCoding</span><span class='hljl-p'>(</span><span class='hljl-n'>levels</span><span class='hljl-oB'>=</span><span class='hljl-nf'>reverse</span><span class='hljl-p'>(</span><span class='hljl-n'>spkr_levels</span><span class='hljl-p'>))))</span>
+</pre>
+
+
+<pre class="output">
+Linear mixed model fit by maximum likelihood
+ rt_trunc ~ 1 &#43; spkr &#43; prec &#43; spkr &amp; prec &#43; &#40;1 | subj&#41;
+     logLik        -2 logLik          AIC             BIC       
+ -1.45767208×10⁴  2.91534417×10⁴  2.91654417×10⁴  2.91983781×10⁴
+
+Variance components:
+            Column    Variance  Std.Dev. 
+subj     &#40;Intercept&#41;   95885.39 309.65366
+Residual              662657.47 814.03776
+ Number of obs: 1789; levels of grouping factors: 56
+
+  Fixed-effects parameters:
+──────────────────────────────────────────────────────────────────
+                             Estimate  Std.Error  z value  P&#40;&gt;|z|&#41;
+──────────────────────────────────────────────────────────────────
+&#40;Intercept&#41;                 2515.31      49.5243    50.79   &lt;1e-99
+spkr: old                     89.9962    27.2107     3.31   0.0009
+prec: maintain              -666.735     38.4928   -17.32   &lt;1e-66
+spkr: old &amp; prec: maintain   -43.3882    38.4928    -1.13   0.2597
+──────────────────────────────────────────────────────────────────
+</pre>
+
+
 <h2>Built in contrast coding schemes</h2>
 <p>StatsModels.jl provides a few commonly used contrast coding schemes, some less-commonly used schemes, and structs that allow you to manually specify your own, custom schemes.</p>
 <p>All are subtypes of the <code>AbstractContrasts</code> type:</p>
@@ -817,55 +891,16 @@ spkr: new &amp; prec: break   -43.3882    38.4928    -1.13   0.2597
 
 
 <pre class='hljl'>
-<span class='hljl-cs'># use ?SeqDiffCoding in the REPL</span><span class='hljl-t'>
-</span><span class='hljl-p'>(</span><span class='hljl-nd'>@doc</span><span class='hljl-t'> </span><span class='hljl-n'>SeqDiffCoding</span><span class='hljl-p'>)</span><span class='hljl-oB'>.</span><span class='hljl-n'>content</span>
+<span class='hljl-cs'># use ?SeqDiffCoding in the REPL</span>
 </pre>
 
-
-<pre class="output">
-1-element Array&#123;Any,1&#125;:
- &#96;&#96;&#96;
-SeqDiffCoding&#40;&#91;base&#91;, levels&#93;&#93;&#41;
-&#96;&#96;&#96;
-
-Code each level in order to test &quot;sequential difference&quot; hypotheses, which 
-compares each level to the level below it &#40;starting with the second level&#41;.
- Specifically, the &#36;n&#36;th predictor tests the hypothesis that the difference
- between levels &#36;n&#36; and &#36;n&#43;1&#36; is zero.
-
-# Examples
-
-&#96;&#96;&#96;jldoctest seqdiff
-julia&gt; seqdiff &#61; StatsModels.ContrastsMatrix&#40;SeqDiffCoding&#40;&#41;, &#91;&quot;a&quot;, &quot;b&quot;, &quot;c
-&quot;, &quot;d&quot;&#93;&#41;.matrix
-4×3 Array&#123;Float64,2&#125;:
- -0.75  -0.5  -0.25
-  0.25  -0.5  -0.25
-  0.25   0.5  -0.25
-  0.25   0.5   0.75
-&#96;&#96;&#96;
-
-The interpretation of sequential difference coding may be hard to see from 
-the contrasts matrix itself.  The corresponding hypothesis matrix shows a c
-learer picture.  From the rows of the hypothesis matrix, we can see that th
-ese contrasts test the difference between the first and second levels, the 
-second and third, and the third and fourth, respectively:
-
-&#96;&#96;&#96;jldoctest seqdiff
-julia&gt; round.&#40;pinv&#40;seqdiff&#41;, digits&#61;2&#41;
-3×4 Array&#123;Float64,2&#125;:
- -1.0   1.0  -0.0   0.0
- -0.0  -1.0   1.0  -0.0
-  0.0  -0.0  -1.0   1.0
-&#96;&#96;&#96;
-</pre>
 
 
 <h3>Standard contrasts</h3>
 <p>The most commonly used contrasts are <code>DummyCoding</code> and <code>EffectsCoding</code> &#40;which are similar to <code>contr.treatment</code> and <code>contr.sum</code> in R, respectively&#41;.</p>
 <h3>&quot;Exotic&quot; contrasts</h3>
 <p>We also provide <code>HelmertCoding</code> and <code>SeqDiffCoding</code> &#40;corresponding to base R&#39;s <code>contr.helmert</code> and MASS&#39;s <code>contr.sdiff</code>&#41;.</p>
-<h3>Manual contrasts</h3>
+<h2>Manual contrasts</h2>
 <p>There are two ways to manually specify contrasts. First, you can specify them <strong>directly</strong> via <code>ContrastsCoding</code>. If you do, it&#39;s good practice to specify the levels corresponding to the rows of the matrix, although they can be omitted in which case they&#39;ll be inferred from the data.</p>
 <p>For instance, here&#39;s a weird set of contrasts for <code>:spkr</code>:</p>
 
@@ -920,14 +955,103 @@ spkr: new &amp; prec: maintain    86.7763    76.9856     1.13   0.2597
 </pre>
 
 
+<h3>Example: manual Helmert contrasts</h3>
+<p>Let&#39;s say you want Helmert contrasts but you always forget what it&#39;s called. Here&#39;s how you can manually specify them using <code>StatsModels.ContrastsCoding</code>.</p>
+<p>Because this isn&#39;t very interesting with only two levels, let&#39;s combine <code>:spkr</code> and <code>:prec</code> into a single, 4-level variable:</p>
+
+
+<pre class='hljl'>
+<span class='hljl-n'>kb07ex</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nd'>@transform</span><span class='hljl-p'>(</span><span class='hljl-n'>kb07</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>spkr_prec</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-sc'>:spkr</span><span class='hljl-t'> </span><span class='hljl-oB'>.*</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;-&quot;</span><span class='hljl-t'> </span><span class='hljl-oB'>.*</span><span class='hljl-t'> </span><span class='hljl-sc'>:prec</span><span class='hljl-p'>);</span><span class='hljl-t'>
+</span><span class='hljl-n'>levels</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-p'>[</span><span class='hljl-s'>&quot;new-break&quot;</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;new-maintain&quot;</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;old-break&quot;</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;old-maintain&quot;</span><span class='hljl-p'>]</span><span class='hljl-t'>
+</span><span class='hljl-n'>f2</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nd'>@formula</span><span class='hljl-p'>(</span><span class='hljl-n'>rt_trunc</span><span class='hljl-t'> </span><span class='hljl-oB'>~</span><span class='hljl-t'> </span><span class='hljl-ni'>1</span><span class='hljl-t'> </span><span class='hljl-oB'>+</span><span class='hljl-t'> </span><span class='hljl-n'>spkr_prec</span><span class='hljl-t'> </span><span class='hljl-oB'>+</span><span class='hljl-t'> </span><span class='hljl-p'>(</span><span class='hljl-ni'>1</span><span class='hljl-t'> </span><span class='hljl-oB'>|</span><span class='hljl-t'> </span><span class='hljl-n'>subj</span><span class='hljl-p'>))</span>
+</pre>
+
+
+<pre class="output">
+FormulaTerm
+Response:
+  rt_trunc&#40;unknown&#41;
+Predictors:
+  1
+  spkr_prec&#40;unknown&#41;
+  &#40;subj&#41;-&gt;1 | subj
+</pre>
+
+
+
+<pre class='hljl'>
+<span class='hljl-k'>using</span><span class='hljl-t'> </span><span class='hljl-n'>StatsModels</span><span class='hljl-oB'>:</span><span class='hljl-t'> </span><span class='hljl-n'>ContrastsCoding</span><span class='hljl-t'>
+</span><span class='hljl-n'>man_helm</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-p'>[</span><span class='hljl-oB'>-</span><span class='hljl-ni'>1</span><span class='hljl-t'> </span><span class='hljl-oB'>-</span><span class='hljl-ni'>1</span><span class='hljl-t'> </span><span class='hljl-oB'>-</span><span class='hljl-ni'>1</span><span class='hljl-t'>
+             </span><span class='hljl-ni'>1</span><span class='hljl-t'> </span><span class='hljl-oB'>-</span><span class='hljl-ni'>1</span><span class='hljl-t'> </span><span class='hljl-oB'>-</span><span class='hljl-ni'>1</span><span class='hljl-t'>
+             </span><span class='hljl-ni'>0</span><span class='hljl-t'>  </span><span class='hljl-ni'>2</span><span class='hljl-t'> </span><span class='hljl-oB'>-</span><span class='hljl-ni'>1</span><span class='hljl-t'>
+             </span><span class='hljl-ni'>0</span><span class='hljl-t'>  </span><span class='hljl-ni'>0</span><span class='hljl-t'>  </span><span class='hljl-ni'>3</span><span class='hljl-p'>]</span><span class='hljl-t'>
+</span><span class='hljl-n'>contr_helm_man</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>ContrastsCoding</span><span class='hljl-p'>(</span><span class='hljl-n'>man_helm</span><span class='hljl-p'>[</span><span class='hljl-oB'>:</span><span class='hljl-p'>,</span><span class='hljl-ni'>1</span><span class='hljl-oB'>:</span><span class='hljl-ni'>3</span><span class='hljl-p'>],</span><span class='hljl-t'> </span><span class='hljl-n'>levels</span><span class='hljl-oB'>=</span><span class='hljl-n'>levels</span><span class='hljl-p'>)</span><span class='hljl-t'>
+</span><span class='hljl-nf'>fit</span><span class='hljl-p'>(</span><span class='hljl-n'>MixedModel</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>f2</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>kb07ex</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>contrasts</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>Dict</span><span class='hljl-p'>(</span><span class='hljl-sc'>:spkr_prec</span><span class='hljl-t'> </span><span class='hljl-oB'>=&gt;</span><span class='hljl-t'> </span><span class='hljl-n'>contr_helm_man</span><span class='hljl-p'>))</span>
+</pre>
+
+
+<pre class="output">
+Linear mixed model fit by maximum likelihood
+ rt_trunc ~ 1 &#43; spkr_prec &#43; &#40;1 | subj&#41;
+     logLik        -2 logLik          AIC             BIC       
+ -1.45767208×10⁴  2.91534417×10⁴  2.91654417×10⁴  2.91983781×10⁴
+
+Variance components:
+            Column    Variance  Std.Dev. 
+subj     &#40;Intercept&#41;   95885.39 309.65366
+Residual              662657.47 814.03776
+ Number of obs: 1789; levels of grouping factors: 56
+
+  Fixed-effects parameters:
+───────────────────────────────────────────────────────────────
+                          Estimate  Std.Error  z value  P&#40;&gt;|z|&#41;
+───────────────────────────────────────────────────────────────
+&#40;Intercept&#41;              2181.94      45.6362    47.81   &lt;1e-99
+spkr_prec: new-maintain  -311.673     27.2107   -11.45   &lt;1e-29
+spkr_prec: old-break      163.889     15.7041    10.44   &lt;1e-24
+spkr_prec: old-maintain   -95.5865    11.1225    -8.59   &lt;1e-17
+───────────────────────────────────────────────────────────────
+</pre>
+
+
+<p>We can see that this is equivalent to <code>HelmertCoding</code>:</p>
+
+
+<pre class='hljl'>
+<span class='hljl-nf'>fit</span><span class='hljl-p'>(</span><span class='hljl-n'>MixedModel</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>f2</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>kb07ex</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>contrasts</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>Dict</span><span class='hljl-p'>(</span><span class='hljl-sc'>:spkr_prec</span><span class='hljl-t'> </span><span class='hljl-oB'>=&gt;</span><span class='hljl-t'> </span><span class='hljl-nf'>HelmertCoding</span><span class='hljl-p'>(</span><span class='hljl-n'>levels</span><span class='hljl-oB'>=</span><span class='hljl-n'>levels</span><span class='hljl-p'>)))</span>
+</pre>
+
+
+<pre class="output">
+Linear mixed model fit by maximum likelihood
+ rt_trunc ~ 1 &#43; spkr_prec &#43; &#40;1 | subj&#41;
+     logLik        -2 logLik          AIC             BIC       
+ -1.45767208×10⁴  2.91534417×10⁴  2.91654417×10⁴  2.91983781×10⁴
+
+Variance components:
+            Column    Variance  Std.Dev. 
+subj     &#40;Intercept&#41;   95885.39 309.65366
+Residual              662657.47 814.03776
+ Number of obs: 1789; levels of grouping factors: 56
+
+  Fixed-effects parameters:
+───────────────────────────────────────────────────────────────
+                          Estimate  Std.Error  z value  P&#40;&gt;|z|&#41;
+───────────────────────────────────────────────────────────────
+&#40;Intercept&#41;              2181.94      45.6362    47.81   &lt;1e-99
+spkr_prec: new-maintain  -311.673     27.2107   -11.45   &lt;1e-29
+spkr_prec: old-break      163.889     15.7041    10.44   &lt;1e-24
+spkr_prec: old-maintain   -95.5865    11.1225    -8.59   &lt;1e-17
+───────────────────────────────────────────────────────────────
+</pre>
+
+
 <h2>Contrasts from hypotheses</h2>
 <p>A better way to specify manual contrasts is via <code>HypothesisCoding</code>, where each row of the matrix corresponds to the weights given to the cell means of the levels corresponding to each column &#40;see <a href="https://doi.org/10.1016/j.jml.2019.104038">Schad et al. 2020</a> for more information&#41;. This is less interesting with only two levels, so let&#39;s look at a scenario where we combine <code>:spkr</code> and <code>:prec</code> into a single, 4-level predictor, and want to test some strange hypotheses.</p>
 
 
 <pre class='hljl'>
-<span class='hljl-n'>kb07ex</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nd'>@transform</span><span class='hljl-p'>(</span><span class='hljl-n'>kb07</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>spkr_prec</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-sc'>:spkr</span><span class='hljl-t'> </span><span class='hljl-oB'>.*</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;-&quot;</span><span class='hljl-t'> </span><span class='hljl-oB'>.*</span><span class='hljl-t'> </span><span class='hljl-sc'>:prec</span><span class='hljl-p'>);</span><span class='hljl-t'>
-
-</span><span class='hljl-n'>f2</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nd'>@formula</span><span class='hljl-p'>(</span><span class='hljl-n'>rt_trunc</span><span class='hljl-t'> </span><span class='hljl-oB'>~</span><span class='hljl-t'> </span><span class='hljl-ni'>1</span><span class='hljl-t'> </span><span class='hljl-oB'>+</span><span class='hljl-t'> </span><span class='hljl-n'>spkr_prec</span><span class='hljl-t'> </span><span class='hljl-oB'>+</span><span class='hljl-t'> </span><span class='hljl-p'>(</span><span class='hljl-ni'>1</span><span class='hljl-t'> </span><span class='hljl-oB'>|</span><span class='hljl-t'> </span><span class='hljl-n'>subj</span><span class='hljl-p'>))</span><span class='hljl-t'>
+<span class='hljl-n'>f2</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nd'>@formula</span><span class='hljl-p'>(</span><span class='hljl-n'>rt_trunc</span><span class='hljl-t'> </span><span class='hljl-oB'>~</span><span class='hljl-t'> </span><span class='hljl-ni'>1</span><span class='hljl-t'> </span><span class='hljl-oB'>+</span><span class='hljl-t'> </span><span class='hljl-n'>spkr_prec</span><span class='hljl-t'> </span><span class='hljl-oB'>+</span><span class='hljl-t'> </span><span class='hljl-p'>(</span><span class='hljl-ni'>1</span><span class='hljl-t'> </span><span class='hljl-oB'>|</span><span class='hljl-t'> </span><span class='hljl-n'>subj</span><span class='hljl-p'>))</span><span class='hljl-t'>
 </span><span class='hljl-n'>mod4</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>fit</span><span class='hljl-p'>(</span><span class='hljl-n'>MixedModel</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>f2</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>kb07ex</span><span class='hljl-p'>)</span>
 </pre>
 
@@ -960,13 +1084,52 @@ spkr_prec: old-maintain  -530.131    54.4839    -9.73   &lt;1e-21
 
 
 <pre class='hljl'>
-<span class='hljl-n'>levels</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-p'>[</span><span class='hljl-s'>&quot;new-break&quot;</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;new-maintain&quot;</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;old-break&quot;</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;old-maintain&quot;</span><span class='hljl-p'>]</span><span class='hljl-t'>
+<span class='hljl-n'>prec_old</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-p'>(</span><span class='hljl-n'>levels</span><span class='hljl-t'> </span><span class='hljl-oB'>.==</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;old-break&quot;</span><span class='hljl-p'>)</span><span class='hljl-t'> </span><span class='hljl-oB'>.-</span><span class='hljl-t'> </span><span class='hljl-p'>(</span><span class='hljl-n'>levels</span><span class='hljl-t'> </span><span class='hljl-oB'>.==</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;old-maintain&quot;</span><span class='hljl-p'>)</span>
+</pre>
 
-</span><span class='hljl-n'>prec_old</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-p'>(</span><span class='hljl-n'>levels</span><span class='hljl-t'> </span><span class='hljl-oB'>.==</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;old-break&quot;</span><span class='hljl-p'>)</span><span class='hljl-t'> </span><span class='hljl-oB'>.-</span><span class='hljl-t'> </span><span class='hljl-p'>(</span><span class='hljl-n'>levels</span><span class='hljl-t'> </span><span class='hljl-oB'>.==</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;old-maintain&quot;</span><span class='hljl-p'>)</span><span class='hljl-t'>
-</span><span class='hljl-n'>prec_new</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-p'>(</span><span class='hljl-n'>levels</span><span class='hljl-t'> </span><span class='hljl-oB'>.==</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;new-break&quot;</span><span class='hljl-p'>)</span><span class='hljl-t'> </span><span class='hljl-oB'>.-</span><span class='hljl-t'> </span><span class='hljl-p'>(</span><span class='hljl-n'>levels</span><span class='hljl-t'> </span><span class='hljl-oB'>.==</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;new-maintain&quot;</span><span class='hljl-p'>)</span><span class='hljl-t'>
-</span><span class='hljl-n'>old_new</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-p'>(</span><span class='hljl-n'>abs</span><span class='hljl-oB'>.</span><span class='hljl-p'>(</span><span class='hljl-n'>prec_old</span><span class='hljl-p'>)</span><span class='hljl-t'> </span><span class='hljl-oB'>.-</span><span class='hljl-t'> </span><span class='hljl-n'>abs</span><span class='hljl-oB'>.</span><span class='hljl-p'>(</span><span class='hljl-n'>prec_new</span><span class='hljl-p'>))</span><span class='hljl-t'> </span><span class='hljl-oB'>./</span><span class='hljl-t'> </span><span class='hljl-ni'>2</span><span class='hljl-t'>
 
-</span><span class='hljl-n'>contr_hyp</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>HypothesisCoding</span><span class='hljl-p'>(</span><span class='hljl-nf'>Matrix</span><span class='hljl-p'>(</span><span class='hljl-nf'>hcat</span><span class='hljl-p'>(</span><span class='hljl-n'>old_new</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>prec_old</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>prec_new</span><span class='hljl-p'>)</span><span class='hljl-oB'>&#39;</span><span class='hljl-p'>),</span><span class='hljl-t'>
+<pre class="output">
+4-element Array&#123;Int64,1&#125;:
+  0
+  0
+  1
+ -1
+</pre>
+
+
+
+<pre class='hljl'>
+<span class='hljl-n'>prec_new</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-p'>(</span><span class='hljl-n'>levels</span><span class='hljl-t'> </span><span class='hljl-oB'>.==</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;new-break&quot;</span><span class='hljl-p'>)</span><span class='hljl-t'> </span><span class='hljl-oB'>.-</span><span class='hljl-t'> </span><span class='hljl-p'>(</span><span class='hljl-n'>levels</span><span class='hljl-t'> </span><span class='hljl-oB'>.==</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;new-maintain&quot;</span><span class='hljl-p'>)</span>
+</pre>
+
+
+<pre class="output">
+4-element Array&#123;Int64,1&#125;:
+  1
+ -1
+  0
+  0
+</pre>
+
+
+
+<pre class='hljl'>
+<span class='hljl-n'>old_new</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-p'>(</span><span class='hljl-n'>abs</span><span class='hljl-oB'>.</span><span class='hljl-p'>(</span><span class='hljl-n'>prec_old</span><span class='hljl-p'>)</span><span class='hljl-t'> </span><span class='hljl-oB'>.-</span><span class='hljl-t'> </span><span class='hljl-n'>abs</span><span class='hljl-oB'>.</span><span class='hljl-p'>(</span><span class='hljl-n'>prec_new</span><span class='hljl-p'>))</span><span class='hljl-t'> </span><span class='hljl-oB'>./</span><span class='hljl-t'> </span><span class='hljl-ni'>2</span>
+</pre>
+
+
+<pre class="output">
+4-element Array&#123;Float64,1&#125;:
+ -0.5
+ -0.5
+  0.5
+  0.5
+</pre>
+
+
+
+<pre class='hljl'>
+<span class='hljl-n'>contr_hyp</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>HypothesisCoding</span><span class='hljl-p'>(</span><span class='hljl-nf'>Matrix</span><span class='hljl-p'>(</span><span class='hljl-nf'>hcat</span><span class='hljl-p'>(</span><span class='hljl-n'>old_new</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>prec_old</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>prec_new</span><span class='hljl-p'>)</span><span class='hljl-oB'>&#39;</span><span class='hljl-p'>),</span><span class='hljl-t'>
                              </span><span class='hljl-n'>labels</span><span class='hljl-oB'>=</span><span class='hljl-p'>[</span><span class='hljl-s'>&quot;old&quot;</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;(old) break&quot;</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;(new) break&quot;</span><span class='hljl-p'>])</span><span class='hljl-t'>
 </span><span class='hljl-n'>contr_hyp</span><span class='hljl-oB'>.</span><span class='hljl-n'>hypotheses</span>
 </pre>
@@ -1064,6 +1227,97 @@ spkr: old &amp; prec: break   355.062     27.2263    13.04   &lt;1e-38
 ───────────────────────────────────────────────────────────────
 </pre>
 
+
+<h3>Example: Helmert contrasts that actually make sense</h3>
+<p>Let&#39;s say you want something like Helmert contrasts, but where the βs are interpretable as the difference between the <span class="math">$n$</span>th level and the average of levels <span class="math">$1\ldots n-1$</span>.  Here are the hypotheses that correspond to that:</p>
+
+
+<pre class='hljl'>
+<span class='hljl-n'>helmert_hypotheses</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-p'>[</span><span class='hljl-oB'>-</span><span class='hljl-ni'>1</span><span class='hljl-t'> </span><span class='hljl-oB'>-</span><span class='hljl-ni'>1</span><span class='hljl-oB'>/</span><span class='hljl-ni'>2</span><span class='hljl-t'> </span><span class='hljl-oB'>-</span><span class='hljl-ni'>1</span><span class='hljl-oB'>/</span><span class='hljl-ni'>3</span><span class='hljl-t'>
+                       </span><span class='hljl-ni'>1</span><span class='hljl-t'> </span><span class='hljl-oB'>-</span><span class='hljl-ni'>1</span><span class='hljl-oB'>/</span><span class='hljl-ni'>2</span><span class='hljl-t'> </span><span class='hljl-oB'>-</span><span class='hljl-ni'>1</span><span class='hljl-oB'>/</span><span class='hljl-ni'>3</span><span class='hljl-t'>
+                       </span><span class='hljl-ni'>0</span><span class='hljl-t'>  </span><span class='hljl-ni'>1</span><span class='hljl-t'>   </span><span class='hljl-oB'>-</span><span class='hljl-ni'>1</span><span class='hljl-oB'>/</span><span class='hljl-ni'>3</span><span class='hljl-t'>
+                      </span><span class='hljl-ni'>0</span><span class='hljl-t'>  </span><span class='hljl-ni'>0</span><span class='hljl-t'>    </span><span class='hljl-ni'>1</span><span class='hljl-p'>]</span>
+</pre>
+
+
+<pre class="output">
+4×3 Array&#123;Float64,2&#125;:
+ -1.0  -0.5  -0.333333
+  1.0  -0.5  -0.333333
+  0.0   1.0  -0.333333
+  0.0   0.0   1.0
+</pre>
+
+
+<p>And the resulting contrasts matrix:</p>
+
+
+<pre class='hljl'>
+<span class='hljl-n'>contr_helm_hyp</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>HypothesisCoding</span><span class='hljl-p'>(</span><span class='hljl-nf'>Matrix</span><span class='hljl-p'>(</span><span class='hljl-n'>helmert_hypotheses</span><span class='hljl-oB'>&#39;</span><span class='hljl-p'>),</span><span class='hljl-t'> </span><span class='hljl-n'>levels</span><span class='hljl-oB'>=</span><span class='hljl-n'>levels</span><span class='hljl-p'>)</span><span class='hljl-t'>
+</span><span class='hljl-n'>contr_helm_hyp</span><span class='hljl-oB'>.</span><span class='hljl-n'>contrasts</span>
+</pre>
+
+
+<pre class="output">
+4×3 Array&#123;Float64,2&#125;:
+ -0.5          -0.333333     -0.25
+  0.5          -0.333333     -0.25
+  5.88785e-17   0.666667     -0.25
+  5.88785e-17   2.97183e-16   0.75
+</pre>
+
+
+<p>Which is similar but not identical to the contrats matrix for HelmertCoding&#33;  In a way that I would not be able to derive off the top of my head.</p>
+<p>Now we fit the model:</p>
+
+
+<pre class='hljl'>
+<span class='hljl-nf'>fit</span><span class='hljl-p'>(</span><span class='hljl-n'>MixedModel</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>f2</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>kb07ex</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>contrasts</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>Dict</span><span class='hljl-p'>(</span><span class='hljl-sc'>:spkr_prec</span><span class='hljl-t'> </span><span class='hljl-oB'>=&gt;</span><span class='hljl-t'> </span><span class='hljl-n'>contr_helm_hyp</span><span class='hljl-p'>))</span>
+</pre>
+
+
+<pre class="output">
+Linear mixed model fit by maximum likelihood
+ rt_trunc ~ 1 &#43; spkr_prec &#43; &#40;1 | subj&#41;
+     logLik        -2 logLik          AIC             BIC       
+ -1.45767208×10⁴  2.91534417×10⁴  2.91654417×10⁴  2.91983781×10⁴
+
+Variance components:
+            Column    Variance  Std.Dev. 
+subj     &#40;Intercept&#41;   95885.39 309.65366
+Residual              662657.47 814.03776
+ Number of obs: 1789; levels of grouping factors: 56
+
+  Fixed-effects parameters:
+──────────────────────────────────────────────────────────────
+                         Estimate  Std.Error  z value  P&#40;&gt;|z|&#41;
+──────────────────────────────────────────────────────────────
+&#40;Intercept&#41;              2181.94     45.6362    47.81   &lt;1e-99
+spkr_prec: new-maintain  -623.347    54.4214   -11.45   &lt;1e-29
+spkr_prec: old-break      491.666    47.1123    10.44   &lt;1e-24
+spkr_prec: old-maintain  -382.346    44.4902    -8.59   &lt;1e-17
+──────────────────────────────────────────────────────────────
+</pre>
+
+
+<p>...and we can see that the βs for levels are very close to the cumulative means minus the mean for that level, computed manually</p>
+
+
+<pre class='hljl'>
+<span class='hljl-cs'># (using join to make sure the levels are in the right order)</span><span class='hljl-t'>
+</span><span class='hljl-n'>lev_means</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>join</span><span class='hljl-p'>(</span><span class='hljl-nf'>DataFrame</span><span class='hljl-p'>(</span><span class='hljl-n'>spkr_prec</span><span class='hljl-oB'>=</span><span class='hljl-n'>levels</span><span class='hljl-p'>),</span><span class='hljl-t'>
+                 </span><span class='hljl-nf'>by</span><span class='hljl-p'>(</span><span class='hljl-n'>kb07ex</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:spkr_prec</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>mean_rt</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-sc'>:rt_trunc</span><span class='hljl-t'> </span><span class='hljl-oB'>=&gt;</span><span class='hljl-t'> </span><span class='hljl-n'>mean</span><span class='hljl-p'>),</span><span class='hljl-t'>
+                 </span><span class='hljl-n'>on</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-sc'>:spkr_prec</span><span class='hljl-p'>)</span><span class='hljl-t'>
+
+</span><span class='hljl-n'>lev_means</span><span class='hljl-p'>[</span><span class='hljl-oB'>!</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:cum_mean</span><span class='hljl-p'>]</span><span class='hljl-t'> </span><span class='hljl-oB'>.=</span><span class='hljl-t'> </span><span class='hljl-nf'>cumsum</span><span class='hljl-p'>(</span><span class='hljl-n'>lev_means</span><span class='hljl-oB'>.</span><span class='hljl-n'>mean_rt</span><span class='hljl-p'>)</span><span class='hljl-t'> </span><span class='hljl-oB'>./</span><span class='hljl-t'> </span><span class='hljl-p'>(</span><span class='hljl-ni'>1</span><span class='hljl-oB'>:</span><span class='hljl-ni'>4</span><span class='hljl-p'>)</span><span class='hljl-t'>
+</span><span class='hljl-n'>lev_means</span><span class='hljl-p'>[</span><span class='hljl-oB'>!</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:diff_with_last_mean</span><span class='hljl-p'>]</span><span class='hljl-t'> </span><span class='hljl-oB'>.=</span><span class='hljl-t'> </span><span class='hljl-n'>lev_means</span><span class='hljl-oB'>.</span><span class='hljl-n'>mean_rt</span><span class='hljl-t'> </span><span class='hljl-oB'>.-</span><span class='hljl-t'> </span><span class='hljl-nf'>lag</span><span class='hljl-p'>(</span><span class='hljl-n'>lev_means</span><span class='hljl-oB'>.</span><span class='hljl-n'>cum_mean</span><span class='hljl-p'>)</span><span class='hljl-t'>
+
+</span><span class='hljl-n'>lev_means</span>
+</pre>
+
+
+
+<table class="data-frame"><thead><tr><th></th><th>spkr_prec</th><th>mean_rt</th><th>cum_mean</th><th>diff_with_last_mean</th></tr><tr><th></th><th>String</th><th>Float64</th><th>Float64</th><th>Float64⍰</th></tr></thead><tbody><p>4 rows × 4 columns</p><tr><th>1</th><td>new-break</td><td>2425.43</td><td>2425.43</td><td>missing</td></tr><tr><th>2</th><td>new-maintain</td><td>1801.97</td><td>2113.7</td><td>-623.465</td></tr><tr><th>3</th><td>old-break</td><td>2605.31</td><td>2277.57</td><td>491.607</td></tr><tr><th>4</th><td>old-maintain</td><td>1895.35</td><td>2182.02</td><td>-382.218</td></tr></tbody></table>
 
 <h1>The <code>@formula</code></h1>
 <p>A formula in Julia is created with the <code>@formula</code> macro.  Between the macro and fitting a model, the formula goes through a number of steps.</p>
@@ -1211,7 +1465,7 @@ true
 
 
 
-<table class="data-frame"><thead><tr><th></th><th>y</th><th>a</th><th>b</th></tr><tr><th></th><th>Float64</th><th>Float64</th><th>Symbol</th></tr></thead><tbody><p>5 rows × 3 columns</p><tr><th>1</th><td>0.048337</td><td>0.107358</td><td>Q</td></tr><tr><th>2</th><td>0.705984</td><td>0.997337</td><td>R</td></tr><tr><th>3</th><td>0.724251</td><td>0.799779</td><td>S</td></tr><tr><th>4</th><td>0.456977</td><td>0.822281</td><td>T</td></tr><tr><th>5</th><td>0.845671</td><td>0.62368</td><td>Q</td></tr></tbody></table>
+<table class="data-frame"><thead><tr><th></th><th>y</th><th>a</th><th>b</th></tr><tr><th></th><th>Float64</th><th>Float64</th><th>Symbol</th></tr></thead><tbody><p>5 rows × 3 columns</p><tr><th>1</th><td>0.540907</td><td>0.781543</td><td>Q</td></tr><tr><th>2</th><td>0.820203</td><td>0.0525262</td><td>R</td></tr><tr><th>3</th><td>0.916497</td><td>0.0619198</td><td>S</td></tr><tr><th>4</th><td>0.227406</td><td>0.308941</td><td>T</td></tr><tr><th>5</th><td>0.197333</td><td>0.0778339</td><td>Q</td></tr></tbody></table>
 
 <p>We can extract a <code>Schema</code>:</p>
 
@@ -1346,12 +1600,12 @@ ERROR: KeyError: key argle_bargle not found
 
 <pre class="output">
 6×3 Array&#123;Float64,2&#125;:
- 0.0       0.0       0.0     
- 0.997337  0.0       0.0     
- 0.0       0.799779  0.0     
- 0.0       0.0       0.822281
- 0.0       0.0       0.0     
- 0.79904   0.0       0.0
+ 0.0        0.0        0.0     
+ 0.0525262  0.0        0.0     
+ 0.0        0.0619198  0.0     
+ 0.0        0.0        0.308941
+ 0.0        0.0        0.0     
+ 0.490118   0.0        0.0
 </pre>
 
 
@@ -1377,12 +1631,12 @@ t_ab_concrete_formula &#61; f_concrete.rhs.terms&#91;end&#93; &#61; a &amp; b
 
 <pre class="output">
 6×3 Array&#123;Float64,2&#125;:
- 0.0       0.0       0.0     
- 0.997337  0.0       0.0     
- 0.0       0.799779  0.0     
- 0.0       0.0       0.822281
- 0.0       0.0       0.0     
- 0.79904   0.0       0.0
+ 0.0        0.0        0.0     
+ 0.0525262  0.0        0.0     
+ 0.0        0.0619198  0.0     
+ 0.0        0.0        0.308941
+ 0.0        0.0        0.0     
+ 0.490118   0.0        0.0
 </pre>
 
 
@@ -1397,12 +1651,12 @@ t_ab_concrete_formula &#61; f_concrete.rhs.terms&#91;end&#93; &#61; a &amp; b
 
 <pre class="output">
 6×8 Array&#123;Float64,2&#125;:
- 1.0  0.107358  0.0  0.0  0.0  0.0       0.0       0.0     
- 1.0  0.997337  1.0  0.0  0.0  0.997337  0.0       0.0     
- 1.0  0.799779  0.0  1.0  0.0  0.0       0.799779  0.0     
- 1.0  0.822281  0.0  0.0  1.0  0.0       0.0       0.822281
- 1.0  0.62368   0.0  0.0  0.0  0.0       0.0       0.0     
- 1.0  0.79904   1.0  0.0  0.0  0.79904   0.0       0.0
+ 1.0  0.781543   0.0  0.0  0.0  0.0        0.0        0.0     
+ 1.0  0.0525262  1.0  0.0  0.0  0.0525262  0.0        0.0     
+ 1.0  0.0619198  0.0  1.0  0.0  0.0        0.0619198  0.0     
+ 1.0  0.308941   0.0  0.0  1.0  0.0        0.0        0.308941
+ 1.0  0.0778339  0.0  0.0  0.0  0.0        0.0        0.0     
+ 1.0  0.490118   1.0  0.0  0.0  0.490118   0.0        0.0
 </pre>
 
 
@@ -1418,11 +1672,11 @@ t_ab_concrete_formula &#61; f_concrete.rhs.terms&#91;end&#93; &#61; a &amp; b
 
 <pre class="output">
 5×8 Array&#123;Float64,2&#125;:
- 1.0  0.974584    1.0  0.0  0.0  0.974584   0.0       0.0
- 1.0  0.21817     1.0  0.0  0.0  0.21817    0.0       0.0
- 1.0  0.00336509  0.0  0.0  0.0  0.0        0.0       0.0
- 1.0  0.574959    0.0  1.0  0.0  0.0        0.574959  0.0
- 1.0  0.0881342   1.0  0.0  0.0  0.0881342  0.0       0.0
+ 1.0  0.682272   1.0  0.0  0.0  0.682272   0.0      0.0
+ 1.0  0.974592   1.0  0.0  0.0  0.974592   0.0      0.0
+ 1.0  0.75855    0.0  0.0  0.0  0.0        0.0      0.0
+ 1.0  0.48055    0.0  1.0  0.0  0.0        0.48055  0.0
+ 1.0  0.0419534  1.0  0.0  0.0  0.0419534  0.0      0.0
 </pre>
 
 
@@ -1543,10 +1797,10 @@ Predictors:
 
 
 <pre class="output">
-&#40;&#91;-3.029557578611623, -0.34816329850210087, -0.3226178256696988, -0.7831212
-326744984, -0.16762519823808514&#93;, &#91;1.0 0.1073579287594375 … 0.0 0.0; 1.0 0.
-9973372408114538 … 0.0 0.0; … ; 1.0 0.822280592817898 … 0.0 0.6761453733249
-537; 1.0 0.6236802987906711 … 0.0 0.0&#93;&#41;
+&#40;&#91;-0.6145083349338837, -0.1982039677011808, -0.0871964775796565, -1.4810173
+649294216, -1.6228616185358296&#93;, &#91;1.0 0.7815431037278331 … 0.0 0.0; 1.0 0.0
+5252615619035739 … 0.0 0.0; … ; 1.0 0.3089408601705099 … 0.0 0.095444455082
+89456; 1.0 0.07783392487892549 … 0.0 0.0&#93;&#41;
 </pre>
 
 
@@ -1569,11 +1823,11 @@ true
 
 <pre class="output">
 5×12 Array&#123;Float64,2&#125;:
- 1.0  0.107358  0.0115257  0.0  0.0  0.0  …  0.0       0.0       0.0     
- 1.0  0.997337  0.994682   1.0  0.0  0.0     0.994682  0.0       0.0     
- 1.0  0.799779  0.639647   0.0  1.0  0.0     0.0       0.639647  0.0     
- 1.0  0.822281  0.676145   0.0  0.0  1.0     0.0       0.0       0.676145
- 1.0  0.62368   0.388977   0.0  0.0  0.0     0.0       0.0       0.0
+ 1.0  0.781543   0.61081     0.0  0.0  …  0.0       0.0         0.0      
+ 1.0  0.0525262  0.002759    1.0  0.0     0.002759  0.0         0.0      
+ 1.0  0.0619198  0.00383406  0.0  1.0     0.0       0.00383406  0.0      
+ 1.0  0.308941   0.0954445   0.0  0.0     0.0       0.0         0.0954445
+ 1.0  0.0778339  0.00605812  0.0  0.0     0.0       0.0         0.0
 </pre>
 
 
