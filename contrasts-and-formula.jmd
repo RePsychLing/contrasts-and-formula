@@ -3,7 +3,7 @@ title: A quick tour of StatsModels.jl
 subtitle: Contrast coding, `@formula`, and Terms
 author: Dave Kleinschmidt
 date: 18 February 2020
-...
+---
 
 # Contrast coding
 

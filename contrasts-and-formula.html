@@ -3,7 +3,7 @@
 <HEAD>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  
+  <title>A quick tour of StatsModels.jl</title>
   
 
   <script type="text/x-mathjax-config">
@@ -656,14 +656,12 @@ div.title {text-align: center;}
         <div class = "col-md-12 twelve columns">
 
           <div class="title">
-            
-            
-            
+            <h1 class="title">A quick tour of StatsModels.jl</h1>
+            <h5>Dave Kleinschmidt</h5>
+            <h5>18 February 2020</h5>
           </div>
 
-          <hr />
-<p>title: A quick tour of StatsModels.jl subtitle: Contrast coding, <code>@formula</code>, and Terms author: Dave Kleinschmidt date: 18 February 2020 ...</p>
-<h1>Contrast coding</h1>
+          <h1>Contrast coding</h1>
 <h2>What and why?</h2>
 <p>To fit any kind of statistical model you need some kind of <em>numerical representation</em> of your data. Data often comes in a <em>table</em>, a named collection of variables of different types of data. Some of that data is &quot;continuous&quot;, or basically numeric. But often our data is not numeric &#40;or continuous&#41;, but &quot;categorical&quot;, having a finite number of distinct levels.</p>
 <p>For instance, let&#39;s look at the KB07 dataset:</p>
@@ -1465,7 +1463,7 @@ true
 
 
 
-<table class="data-frame"><thead><tr><th></th><th>y</th><th>a</th><th>b</th></tr><tr><th></th><th>Float64</th><th>Float64</th><th>Symbol</th></tr></thead><tbody><p>5 rows × 3 columns</p><tr><th>1</th><td>0.540907</td><td>0.781543</td><td>Q</td></tr><tr><th>2</th><td>0.820203</td><td>0.0525262</td><td>R</td></tr><tr><th>3</th><td>0.916497</td><td>0.0619198</td><td>S</td></tr><tr><th>4</th><td>0.227406</td><td>0.308941</td><td>T</td></tr><tr><th>5</th><td>0.197333</td><td>0.0778339</td><td>Q</td></tr></tbody></table>
+<table class="data-frame"><thead><tr><th></th><th>y</th><th>a</th><th>b</th></tr><tr><th></th><th>Float64</th><th>Float64</th><th>Symbol</th></tr></thead><tbody><p>5 rows × 3 columns</p><tr><th>1</th><td>0.161703</td><td>0.24818</td><td>Q</td></tr><tr><th>2</th><td>0.776072</td><td>0.786732</td><td>R</td></tr><tr><th>3</th><td>0.995865</td><td>0.960462</td><td>S</td></tr><tr><th>4</th><td>0.593067</td><td>0.737328</td><td>T</td></tr><tr><th>5</th><td>0.565344</td><td>0.135052</td><td>Q</td></tr></tbody></table>
 
 <p>We can extract a <code>Schema</code>:</p>
 
@@ -1600,12 +1598,12 @@ ERROR: KeyError: key argle_bargle not found
 
 <pre class="output">
 6×3 Array&#123;Float64,2&#125;:
- 0.0        0.0        0.0     
- 0.0525262  0.0        0.0     
- 0.0        0.0619198  0.0     
- 0.0        0.0        0.308941
- 0.0        0.0        0.0     
- 0.490118   0.0        0.0
+ 0.0        0.0       0.0     
+ 0.786732   0.0       0.0     
+ 0.0        0.960462  0.0     
+ 0.0        0.0       0.737328
+ 0.0        0.0       0.0     
+ 0.0811525  0.0       0.0
 </pre>
 
 
@@ -1631,12 +1629,12 @@ t_ab_concrete_formula &#61; f_concrete.rhs.terms&#91;end&#93; &#61; a &amp; b
 
 <pre class="output">
 6×3 Array&#123;Float64,2&#125;:
- 0.0        0.0        0.0     
- 0.0525262  0.0        0.0     
- 0.0        0.0619198  0.0     
- 0.0        0.0        0.308941
- 0.0        0.0        0.0     
- 0.490118   0.0        0.0
+ 0.0        0.0       0.0     
+ 0.786732   0.0       0.0     
+ 0.0        0.960462  0.0     
+ 0.0        0.0       0.737328
+ 0.0        0.0       0.0     
+ 0.0811525  0.0       0.0
 </pre>
 
 
@@ -1651,12 +1649,12 @@ t_ab_concrete_formula &#61; f_concrete.rhs.terms&#91;end&#93; &#61; a &amp; b
 
 <pre class="output">
 6×8 Array&#123;Float64,2&#125;:
- 1.0  0.781543   0.0  0.0  0.0  0.0        0.0        0.0     
- 1.0  0.0525262  1.0  0.0  0.0  0.0525262  0.0        0.0     
- 1.0  0.0619198  0.0  1.0  0.0  0.0        0.0619198  0.0     
- 1.0  0.308941   0.0  0.0  1.0  0.0        0.0        0.308941
- 1.0  0.0778339  0.0  0.0  0.0  0.0        0.0        0.0     
- 1.0  0.490118   1.0  0.0  0.0  0.490118   0.0        0.0
+ 1.0  0.24818    0.0  0.0  0.0  0.0        0.0       0.0     
+ 1.0  0.786732   1.0  0.0  0.0  0.786732   0.0       0.0     
+ 1.0  0.960462   0.0  1.0  0.0  0.0        0.960462  0.0     
+ 1.0  0.737328   0.0  0.0  1.0  0.0        0.0       0.737328
+ 1.0  0.135052   0.0  0.0  0.0  0.0        0.0       0.0     
+ 1.0  0.0811525  1.0  0.0  0.0  0.0811525  0.0       0.0
 </pre>
 
 
@@ -1672,11 +1670,11 @@ t_ab_concrete_formula &#61; f_concrete.rhs.terms&#91;end&#93; &#61; a &amp; b
 
 <pre class="output">
 5×8 Array&#123;Float64,2&#125;:
- 1.0  0.682272   1.0  0.0  0.0  0.682272   0.0      0.0
- 1.0  0.974592   1.0  0.0  0.0  0.974592   0.0      0.0
- 1.0  0.75855    0.0  0.0  0.0  0.0        0.0      0.0
- 1.0  0.48055    0.0  1.0  0.0  0.0        0.48055  0.0
- 1.0  0.0419534  1.0  0.0  0.0  0.0419534  0.0      0.0
+ 1.0  0.0737988  1.0  0.0  0.0  0.0737988  0.0       0.0
+ 1.0  0.20644    1.0  0.0  0.0  0.20644    0.0       0.0
+ 1.0  0.129138   0.0  0.0  0.0  0.0        0.0       0.0
+ 1.0  0.574341   0.0  1.0  0.0  0.0        0.574341  0.0
+ 1.0  0.807918   1.0  0.0  0.0  0.807918   0.0       0.0
 </pre>
 
 
@@ -1797,10 +1795,10 @@ Predictors:
 
 
 <pre class="output">
-&#40;&#91;-0.6145083349338837, -0.1982039677011808, -0.0871964775796565, -1.4810173
-649294216, -1.6228616185358296&#93;, &#91;1.0 0.7815431037278331 … 0.0 0.0; 1.0 0.0
-5252615619035739 … 0.0 0.0; … ; 1.0 0.3089408601705099 … 0.0 0.095444455082
-89456; 1.0 0.07783392487892549 … 0.0 0.0&#93;&#41;
+&#40;&#91;-1.8219935710264386, -0.25350983982644526, -0.004143128628741664, -0.5224
+472105214831, -0.5703205836842805&#93;, &#91;1.0 0.24817967306776967 … 0.0 0.0; 1.0
+ 0.786731579377635 … 0.0 0.0; … ; 1.0 0.7373281182761418 … 0.0 0.5436527540
+006361; 1.0 0.13505244682159767 … 0.0 0.0&#93;&#41;
 </pre>
 
 
@@ -1823,11 +1821,11 @@ true
 
 <pre class="output">
 5×12 Array&#123;Float64,2&#125;:
- 1.0  0.781543   0.61081     0.0  0.0  …  0.0       0.0         0.0      
- 1.0  0.0525262  0.002759    1.0  0.0     0.002759  0.0         0.0      
- 1.0  0.0619198  0.00383406  0.0  1.0     0.0       0.00383406  0.0      
- 1.0  0.308941   0.0954445   0.0  0.0     0.0       0.0         0.0954445
- 1.0  0.0778339  0.00605812  0.0  0.0     0.0       0.0         0.0
+ 1.0  0.24818   0.0615932  0.0  0.0  0.0  …  0.0       0.0       0.0     
+ 1.0  0.786732  0.618947   1.0  0.0  0.0     0.618947  0.0       0.0     
+ 1.0  0.960462  0.922488   0.0  1.0  0.0     0.0       0.922488  0.0     
+ 1.0  0.737328  0.543653   0.0  0.0  1.0     0.0       0.0       0.543653
+ 1.0  0.135052  0.0182392  0.0  0.0  0.0     0.0       0.0       0.0
 </pre>
 
 
