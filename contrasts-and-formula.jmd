@@ -196,3 +196,177 @@ mod6 = fit(MixedModel,
            contrasts = Dict(:spkr => EffectsCoding(base="new"),
                             :prec => EffectsCoding(base="maintain")))
 ```
+
+# The `@formula`
+
+A formula in Julia is created with the `@formula` macro.  Between the macro and
+fitting a model, the formula goes through a number of steps.
+
+* The `@formula` macro itself does some transformations on the syntax, and
+  creates `Term`s
+* Then a `Schema` is extracted from the data, which says which `Term`s are
+  `ContinuousTerm`s and which are `CategoricalTerm`s
+* The `Schema` is then used to transform the original formula into a "concrete
+  formula".
+* The concrete formula (with all `Term`s replaced by continuous/categorical
+  versions) generates model matrix columns when given some data.
+
+The details are described in the
+[documentation](https://juliastats.org/StatsModels.jl/stable/internals/#The-lifecycle-of-a-@formula-1),
+and for the most part modeling packages handle these steps for you.  But in the
+interest of allowing you to do your own weird things, here are a few examples.
+
+## A formula is made of terms
+
+```julia
+f = @formula(y ~ 1 + a + b + a&b)
+```
+
+You can inpsect the internal structure with (it's like `str` in R):
+
+```julia
+dump(f)
+```
+
+We can build the same formula directly, using terms:
+
+```julia
+t_a = term(:a)
+t_b = term(:b)
+t_1 = term(1)
+t_y = term(:y)
+
+dump(t_a)
+```
+
+```julia
+f_dir = FormulaTerm(t_y, (t_1, t_a, t_b, InteractionTerm((t_a, t_b))))
+```
+
+Or, using operator overloading:
+
+```julia
+f_op = t_y ~ t_1 + t_a + t_b + t_a & t_b
+```
+
+These three are all equivalent:
+
+```julia
+f == f_dir == f_op
+```
+
+## The schema gives concrete terms
+
+If we have some fake data:
+
+```julia
+df = DataFrame(y = rand(100), a = rand(100), b = repeat([:Q, :R, :S, :T], 25))
+```
+
+We can extract a `Schema`:
+
+```julia
+sch = schema(df)
+```
+
+This maps un-typed `Term`s to concrete verisons.  Now we know that `:a` is a
+continuous variable in this dataset:
+
+```julia
+sch[term(:a)]
+```
+
+Categorical terms hold the contrasts matrix and levels:
+
+```julia
+t_b_concrete = sch[term(:b)]
+```
+
+```julia
+cmat = t_b_concrete.contrasts
+cmat.matrix
+```
+
+```julia
+cmat.levels
+```
+
+## `apply_schema` combines terms and schema to get concrete versions
+
+The canonical case is to apply the schema to the whole formula:
+
+```julia
+apply_schema(f, sch)
+```
+
+Note that the schema gets pushed through the interaction term, too.
+
+We can also apply the schema to a single term:
+
+```julia
+apply_schema(term(:a) & term(:b), sch)
+```
+
+Of course if the schema doesn't have enough information, we'll get an error:
+
+```julia
+apply_schema(term(:argle_bargle), sch)
+```
+
+## Concrete terms generate arrays with `modelcols`
+
+Any term can generate model columns with `modelcols`:
+
+```julia
+t_ab_concrete = apply_schema(term(:a) & term(:b), sch)
+modelcols(t_ab_concrete, first(df, 6))
+```
+
+Compare with:
+
+```julia
+f_concrete = apply_schema(f, sch)
+@show t_ab_concrete_formula = f_concrete.rhs.terms[end]
+modelcols(t_ab_concrete_formula, first(df, 6))
+```
+
+Of course you can generate columns for the whole formula (it returns a tuple of
+left-hand side, right-hand side columns):
+
+```julia
+y, X = modelcols(f_concrete, first(df, 6))
+X
+```
+
+### Predicting based on new data
+
+Any table with the right columns can be passed to `modelcols` and the right
+columns are generated, even if some levels are missing:
+
+```julia
+df2 = DataFrame(a = rand(5), b = [:R, :R, :Q, :S, :R])
+modelcols(f_concrete.rhs, df2)
+```
+
+### Use a named tuple for a single row
+
+A single row of the model matrix can be generated from a `NamedTuple` of data:
+
+```julia
+data_row = (a = 1.5, b = :T)
+modelcols(f_concrete.rhs, data_row)
+```
+
+## Get coefficient names for any term with `coefnames`
+
+```julia
+coefnames(f_concrete)
+```
+
+```julia
+coefnames(f_concrete.rhs.terms[end])
+```
+
+```julia
+coefnames(sch[term(:b)])
+```
