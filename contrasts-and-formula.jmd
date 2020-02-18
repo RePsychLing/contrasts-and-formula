@@ -261,6 +261,7 @@ If we have some fake data:
 
 ```julia
 df = DataFrame(y = rand(100), a = rand(100), b = repeat([:Q, :R, :S, :T], 25))
+first(df, 5)
 ```
 
 We can extract a `Schema`:
@@ -370,3 +371,68 @@ coefnames(f_concrete.rhs.terms[end])
 ```julia
 coefnames(sch[term(:b)])
 ```
+
+## Formula syntax
+
+The formula syntax is very similar to R, with the exception that an interaction
+is specified with `&`, and that some R syntax is not supported by default (`^`,
+`/` outside of MixedModels.jl).
+
+### Non-special calls 
+
+Any function calls that are not special syntax (`+`, `&`, `*`, and `~`) are
+treated as normal julia code, so you can write things like
+
+```julia
+f2 = @formula(log(y) ~ 1 + (a + a^2) * b)
+```
+
+```julia
+f2_concrete = apply_schema(f2, sch)
+```
+
+```julia
+y2, X2 = modelcols(f2_concrete, first(df, 5))
+```
+
+```julia
+y2 == log.(df[1:5, :y])
+```
+
+```julia
+X2
+```
+
+```julia
+coefnames(f2_concrete.rhs)
+```
+
+### Advanced: making the ordinary special
+
+You may have noticed that `zercocorr` and `|` were not included in the list of
+special syntax above.  StatsModels.jl provides a method to add special syntax
+for the `@formula` that's specific to certain models.  This works using the
+standard Julia techniques of multiple dispatch, by providing methods that
+intercept `apply_schema` for particular combinations of functions, schema, and
+context (model type), like so:
+
+```
+function StatsModels.apply_schema(
+    t::FunctionTerm{typeof(|)},
+    schema::StatsModels.FullRank,
+    Mod::Type{<:MixedModel},
+)
+    schema = StatsModels.FullRank(schema.schema)
+    lhs, rhs = t.args_parsed
+    if !StatsModels.hasintercept(lhs) && !StatsModels.omitsintercept(lhs)
+        lhs = InterceptTerm{true}() + lhs
+    end
+    lhs, rhs = apply_schema.((lhs, rhs), Ref(schema), Mod)
+    RandomEffectsTerm(MatrixTerm(lhs), rhs)
+end
+```
+
+There's a simpler [example in the StatsModels
+docs](https://juliastats.org/StatsModels.jl/stable/internals/#An-example-of-custom-syntax:-poly-1)
+which adds a `poly(x, n)` syntax for polynomial regression.
+
