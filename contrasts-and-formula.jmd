@@ -92,8 +92,9 @@ subtypes(AbstractContrasts)
 And all have fairly extensive documentation via the normal help system.
 For instance:
 
-```
-?SeqDiffCoding
+```julia
+# use ?SeqDiffCoding in the REPL
+(@doc SeqDiffCoding).content
 ```
 
 ### Standard contrasts
@@ -134,7 +135,7 @@ computing the predictor for the interaction:
 mod3.X[1:5, :]
 ```
 
-### Contrasts from hypotheses
+## Contrasts from hypotheses
 
 A better way to specify manual contrasts is via `HypothesisCoding`,
 where each row of the matrix corresponds to the weights given to the
