@@ -19,7 +19,7 @@ levels.
 For instance, let's look at the KB07 dataset:
 
 ```julia
-using DataFrames, DataFramesMeta
+using DataFrames, Pipe
 using MixedModels, GLM
 using LinearAlgebra, Statistics
 
@@ -53,10 +53,6 @@ old`, which indicates that this predictor indicates the presence of
 
 The last column is the interaction term `spkr&prec`, and it's the
 elementwise product of the columns for `spkr: new` and `pred: maintain`.
-
-```julia
-kb07[1:5, :]
-```
 
 ## How to take control
 
@@ -172,7 +168,7 @@ Because this isn't very interesting with only two levels, let's combine `:spkr`
 and `:prec` into a single, 4-level variable:
 
 ```julia
-kb07ex = @transform(kb07, spkr_prec = :spkr .* "-" .* :prec);
+kb07ex = transform(kb07, AsTable([:spkr, :prec]) => (x -> x.spkr .* "-" .* x.prec) => :spkr_prec);
 levels = ["new-break", "new-maintain", "old-break", "old-maintain"]
 f2 = @formula(rt_trunc ~ 1 + spkr_prec + (1 | subj)) 
 ```
@@ -195,16 +191,17 @@ fit(MixedModel, f2, kb07ex, contrasts = Dict(:spkr_prec => HelmertCoding(levels=
 
 ## Contrasts from hypotheses
 
-A better way to specify manual contrasts is via `HypothesisCoding`,
-where each row of the matrix corresponds to the weights given to the
-cell means of the levels corresponding to each column (see [Schad et
-al. 2020](https://doi.org/10.1016/j.jml.2019.104038) for more
-information). This is less interesting with only two levels, so let's
-look at a scenario where we combine `:spkr` and `:prec` into a single,
-4-level predictor, and want to test some strange hypotheses.
+A better way to specify manual contrasts is via `HypothesisCoding`, where each
+row of the matrix corresponds to the weights given to the cell means of the
+levels corresponding to each column (see [Schad et
+al. 2020](https://doi.org/10.1016/j.jml.2019.104038) for more information). As
+before with manual contrasts, this is less interesting with only two levels, so
+we'll again look at a scenario where we combine `:spkr` and `:prec` into a
+single, 4-level predictor, and want to test some strange hypotheses.
+
+Here's the model fit with the default (dummy/treatment-coded contrasts):
 
 ```julia
-f2 = @formula(rt_trunc ~ 1 + spkr_prec + (1 | subj))
 mod4 = fit(MixedModel, f2, kb07ex)
 ```
 
@@ -227,7 +224,7 @@ old_new = (abs.(prec_old) .- abs.(prec_new)) ./ 2
 ```
 
 ```julia
-contr_hyp = HypothesisCoding(Matrix(hcat(old_new, prec_old, prec_new)'),
+contr_hyp = HypothesisCoding(hcat(old_new, prec_old, prec_new)',
                              labels=["old", "(old) break", "(new) break"])
 contr_hyp.hypotheses
 ```
@@ -275,7 +272,7 @@ helmert_hypotheses = [-1 -1/2 -1/3
 And the resulting contrasts matrix:
 
 ```julia
-contr_helm_hyp = HypothesisCoding(Matrix(helmert_hypotheses'),
+contr_helm_hyp = HypothesisCoding(helmert_hypotheses',
                                   levels=levels, labels=levels[2:end])
 contr_helm_hyp.contrasts
 ```
@@ -293,15 +290,12 @@ fit(MixedModel, f2, kb07ex, contrasts = Dict(:spkr_prec => contr_helm_hyp))
 minus the mean for that level, computed manually
 
 ```julia
-# (using join to make sure the levels are in the right order)
-lev_means = join(DataFrame(spkr_prec=levels),
-                 by(kb07ex, :spkr_prec, mean_rt = :rt_trunc => mean),
-                 on = :spkr_prec)
-
-lev_means[!, :cum_mean] .= cumsum(lev_means.mean_rt) ./ (1:4)
-lev_means[!, :diff_with_last_mean] .= lev_means.mean_rt .- lag(lev_means.cum_mean)
-
-lev_means
+lev_means = @pipe kb07ex |>
+    groupby(_, :spkr_prec) |>
+    combine(_, :rt_trunc => mean => :mean_rt) |>
+    innerjoin(DataFrame(spkr_prec=levels), _, on=:spkr_prec) |>
+    transform(_, :mean_rt => (x -> cumsum(x) ./ (1:length(x))) => :cum_mean) |>
+    transform(_, [:mean_rt, :cum_mean] => ((x,y) -> x - lag(y)) => :diff_with_last_mean)
 ```
 
 # The `@formula`
