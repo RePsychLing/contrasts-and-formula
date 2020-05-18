@@ -661,18 +661,27 @@ div.title {text-align: center;}
             <h5>18 February 2020</h5>
           </div>
 
-          <h1>Contrast coding</h1>
-<h2>What and why?</h2>
-<p>To fit any kind of statistical model you need some kind of <em>numerical representation</em> of your data. Data often comes in a <em>table</em>, a named collection of variables of different types of data. Some of that data is &quot;continuous&quot;, or basically numeric. But often our data is not numeric &#40;or continuous&#41;, but &quot;categorical&quot;, having a finite number of distinct levels.</p>
-<p>For instance, let&#39;s look at the KB07 dataset:</p>
-
+          
 
 <pre class='hljl'>
 <span class='hljl-k'>using</span><span class='hljl-t'> </span><span class='hljl-n'>DataFrames</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>Pipe</span><span class='hljl-t'>
 </span><span class='hljl-k'>using</span><span class='hljl-t'> </span><span class='hljl-n'>MixedModels</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>GLM</span><span class='hljl-t'>
 </span><span class='hljl-k'>using</span><span class='hljl-t'> </span><span class='hljl-n'>LinearAlgebra</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>Statistics</span><span class='hljl-t'>
 
-</span><span class='hljl-n'>kb07</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>MixedModels</span><span class='hljl-oB'>.</span><span class='hljl-nf'>dataset</span><span class='hljl-p'>(</span><span class='hljl-sc'>:kb07</span><span class='hljl-p'>)</span><span class='hljl-t'>
+</span><span class='hljl-k'>using</span><span class='hljl-t'> </span><span class='hljl-n'>StatsModels</span><span class='hljl-t'>
+</span><span class='hljl-k'>using</span><span class='hljl-t'> </span><span class='hljl-n'>StatsModels</span><span class='hljl-oB'>:</span><span class='hljl-t'> </span><span class='hljl-n'>pretty_mat</span>
+</pre>
+
+
+
+<h1>Contrast coding</h1>
+<h2>What and why?</h2>
+<p>To fit any kind of statistical model you need some kind of <em>numerical representation</em> of your data. Data often comes in a <em>table</em>, a named collection of variables of different types of data. Some of that data is &quot;continuous&quot;, or basically numeric. But often our data is not numeric &#40;or continuous&#41;, but &quot;categorical&quot;, having a finite number of distinct levels.</p>
+<p>For instance, let&#39;s look at the KB07 dataset:</p>
+
+
+<pre class='hljl'>
+<span class='hljl-n'>kb07</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>MixedModels</span><span class='hljl-oB'>.</span><span class='hljl-nf'>dataset</span><span class='hljl-p'>(</span><span class='hljl-sc'>:kb07</span><span class='hljl-p'>)</span><span class='hljl-t'>
 </span><span class='hljl-nf'>first</span><span class='hljl-p'>(</span><span class='hljl-n'>kb07</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-ni'>5</span><span class='hljl-p'>)</span>
 </pre>
 
@@ -717,7 +726,7 @@ spkr: old &amp; prec: maintain   -86.7763    76.9856    -1.13   0.2597
 
 
 <pre class='hljl'>
-<span class='hljl-n'>Int</span><span class='hljl-oB'>.</span><span class='hljl-p'>(</span><span class='hljl-n'>mod</span><span class='hljl-oB'>.</span><span class='hljl-n'>X</span><span class='hljl-p'>)[</span><span class='hljl-ni'>1</span><span class='hljl-oB'>:</span><span class='hljl-ni'>5</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-oB'>:</span><span class='hljl-p'>]</span>
+<span class='hljl-nf'>pretty_mat</span><span class='hljl-p'>(</span><span class='hljl-n'>mod</span><span class='hljl-oB'>.</span><span class='hljl-n'>X</span><span class='hljl-p'>[</span><span class='hljl-ni'>1</span><span class='hljl-oB'>:</span><span class='hljl-ni'>5</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-oB'>:</span><span class='hljl-p'>])</span>
 </pre>
 
 
@@ -1092,12 +1101,12 @@ spkr_prec: old-maintain  -530.131    54.4839    -9.73   &lt;1e-21
 </pre>
 
 
-<p>These hypotheses correspond to the following <em>contrasts</em> &#40;using the <a href="https://docs.julialang.org/en/v1/base/math/#Base.rationalize"><code>rationalize</code></a> function to make pretty fractions, like the <code>fractions</code> function in R&#41;:</p>
+<p>These hypotheses correspond to the following <em>contrasts</em> &#40;using the <a href="https://github.com/JuliaStats/StatsModels.jl/blob/master/src/contrasts.jl#L716-L723"><code>StatsModels.pretty_mat</code></a> function to make pretty fractions; this is based on <a href="https://docs.julialang.org/en/v1/base/math/#Base.rationalize"><code>rationalize</code></a> function, which is like the <code>fractions</code> function in R&#41;:</p>
 
 
 <pre class='hljl'>
 <span class='hljl-n'>seq_diff_contrs</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>HypothesisCoding</span><span class='hljl-p'>(</span><span class='hljl-n'>seq_diff_hyps</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>levels</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>levels</span><span class='hljl-p'>)</span><span class='hljl-t'>
-</span><span class='hljl-n'>rationalize</span><span class='hljl-oB'>.</span><span class='hljl-p'>(</span><span class='hljl-n'>seq_diff_contrs</span><span class='hljl-oB'>.</span><span class='hljl-n'>contrasts</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>tol</span><span class='hljl-oB'>=</span><span class='hljl-nfB'>1e-10</span><span class='hljl-p'>)</span>
+</span><span class='hljl-nf'>pretty_mat</span><span class='hljl-p'>(</span><span class='hljl-n'>seq_diff_contrs</span><span class='hljl-oB'>.</span><span class='hljl-n'>contrasts</span><span class='hljl-p'>)</span>
 </pre>
 
 
@@ -1235,7 +1244,7 @@ spkr_prec: old-maintain  -710.123    54.4527   -13.04   &lt;1e-38
 
 
 <pre class='hljl'>
-<span class='hljl-n'>rationalize</span><span class='hljl-oB'>.</span><span class='hljl-p'>(</span><span class='hljl-n'>contr_hyp</span><span class='hljl-oB'>.</span><span class='hljl-n'>contrasts</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>tol</span><span class='hljl-oB'>=</span><span class='hljl-nfB'>1e-10</span><span class='hljl-p'>)</span>
+<span class='hljl-nf'>pretty_mat</span><span class='hljl-p'>(</span><span class='hljl-n'>contr_hyp</span><span class='hljl-oB'>.</span><span class='hljl-n'>contrasts</span><span class='hljl-p'>)</span>
 </pre>
 
 
@@ -1343,16 +1352,16 @@ spkr: old &amp; prec: break   355.062     27.2263    13.04   &lt;1e-38
 <pre class='hljl'>
 <span class='hljl-n'>contr_helm_hyp</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>HypothesisCoding</span><span class='hljl-p'>(</span><span class='hljl-n'>helmert_hypotheses</span><span class='hljl-oB'>&#39;</span><span class='hljl-p'>,</span><span class='hljl-t'>
                                   </span><span class='hljl-n'>levels</span><span class='hljl-oB'>=</span><span class='hljl-n'>levels</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>labels</span><span class='hljl-oB'>=</span><span class='hljl-n'>levels</span><span class='hljl-p'>[</span><span class='hljl-ni'>2</span><span class='hljl-oB'>:</span><span class='hljl-k'>end</span><span class='hljl-p'>])</span><span class='hljl-t'>
-</span><span class='hljl-n'>contr_helm_hyp</span><span class='hljl-oB'>.</span><span class='hljl-n'>contrasts</span>
+</span><span class='hljl-nf'>pretty_mat</span><span class='hljl-p'>(</span><span class='hljl-n'>contr_helm_hyp</span><span class='hljl-oB'>.</span><span class='hljl-n'>contrasts</span><span class='hljl-p'>)</span>
 </pre>
 
 
 <pre class="output">
-4×3 Array&#123;Float64,2&#125;:
- -0.5  -0.333333     -0.25
-  0.5  -0.333333     -0.25
-  0.0   0.666667     -0.25
-  0.0   9.16784e-17   0.75
+4×3 Array&#123;Rational&#123;Int64&#125;,2&#125;:
+ -1//2  -1//3  -1//4
+  1//2  -1//3  -1//4
+  0//1   2//3  -1//4
+  0//1   0//1   3//4
 </pre>
 
 
@@ -1551,7 +1560,7 @@ true
 
 
 
-<table class="data-frame"><thead><tr><th></th><th>y</th><th>a</th><th>b</th></tr><tr><th></th><th>Float64</th><th>Float64</th><th>Symbol</th></tr></thead><tbody><p>5 rows × 3 columns</p><tr><th>1</th><td>0.325881</td><td>0.961687</td><td>Q</td></tr><tr><th>2</th><td>0.145549</td><td>0.573496</td><td>R</td></tr><tr><th>3</th><td>0.595166</td><td>0.247699</td><td>S</td></tr><tr><th>4</th><td>0.696168</td><td>0.208955</td><td>T</td></tr><tr><th>5</th><td>0.71545</td><td>0.224402</td><td>Q</td></tr></tbody></table>
+<table class="data-frame"><thead><tr><th></th><th>y</th><th>a</th><th>b</th></tr><tr><th></th><th>Float64</th><th>Float64</th><th>Symbol</th></tr></thead><tbody><p>5 rows × 3 columns</p><tr><th>1</th><td>0.307495</td><td>0.256856</td><td>Q</td></tr><tr><th>2</th><td>0.670065</td><td>0.858086</td><td>R</td></tr><tr><th>3</th><td>0.11368</td><td>0.276019</td><td>S</td></tr><tr><th>4</th><td>0.914106</td><td>0.298955</td><td>T</td></tr><tr><th>5</th><td>0.7041</td><td>0.379508</td><td>Q</td></tr></tbody></table>
 
 <p>We can extract a <code>Schema</code>:</p>
 
@@ -1687,11 +1696,11 @@ ERROR: KeyError: key argle_bargle not found
 <pre class="output">
 6×3 Array&#123;Float64,2&#125;:
  0.0       0.0       0.0
- 0.573496  0.0       0.0
- 0.0       0.247699  0.0
- 0.0       0.0       0.208955
+ 0.858086  0.0       0.0
+ 0.0       0.276019  0.0
+ 0.0       0.0       0.298955
  0.0       0.0       0.0
- 0.492603  0.0       0.0
+ 0.797318  0.0       0.0
 </pre>
 
 
@@ -1718,11 +1727,11 @@ t_ab_concrete_formula &#61; f_concrete.rhs.terms&#91;end&#93; &#61; a &amp; b
 <pre class="output">
 6×3 Array&#123;Float64,2&#125;:
  0.0       0.0       0.0
- 0.573496  0.0       0.0
- 0.0       0.247699  0.0
- 0.0       0.0       0.208955
+ 0.858086  0.0       0.0
+ 0.0       0.276019  0.0
+ 0.0       0.0       0.298955
  0.0       0.0       0.0
- 0.492603  0.0       0.0
+ 0.797318  0.0       0.0
 </pre>
 
 
@@ -1737,12 +1746,12 @@ t_ab_concrete_formula &#61; f_concrete.rhs.terms&#91;end&#93; &#61; a &amp; b
 
 <pre class="output">
 6×8 Array&#123;Float64,2&#125;:
- 1.0  0.961687  0.0  0.0  0.0  0.0       0.0       0.0
- 1.0  0.573496  1.0  0.0  0.0  0.573496  0.0       0.0
- 1.0  0.247699  0.0  1.0  0.0  0.0       0.247699  0.0
- 1.0  0.208955  0.0  0.0  1.0  0.0       0.0       0.208955
- 1.0  0.224402  0.0  0.0  0.0  0.0       0.0       0.0
- 1.0  0.492603  1.0  0.0  0.0  0.492603  0.0       0.0
+ 1.0  0.256856  0.0  0.0  0.0  0.0       0.0       0.0
+ 1.0  0.858086  1.0  0.0  0.0  0.858086  0.0       0.0
+ 1.0  0.276019  0.0  1.0  0.0  0.0       0.276019  0.0
+ 1.0  0.298955  0.0  0.0  1.0  0.0       0.0       0.298955
+ 1.0  0.379508  0.0  0.0  0.0  0.0       0.0       0.0
+ 1.0  0.797318  1.0  0.0  0.0  0.797318  0.0       0.0
 </pre>
 
 
@@ -1758,11 +1767,11 @@ t_ab_concrete_formula &#61; f_concrete.rhs.terms&#91;end&#93; &#61; a &amp; b
 
 <pre class="output">
 5×8 Array&#123;Float64,2&#125;:
- 1.0  0.947003  1.0  0.0  0.0  0.947003  0.0       0.0
- 1.0  0.946075  1.0  0.0  0.0  0.946075  0.0       0.0
- 1.0  0.354676  0.0  0.0  0.0  0.0       0.0       0.0
- 1.0  0.448929  0.0  1.0  0.0  0.0       0.448929  0.0
- 1.0  0.758199  1.0  0.0  0.0  0.758199  0.0       0.0
+ 1.0  0.358765  1.0  0.0  0.0  0.358765  0.0       0.0
+ 1.0  0.415072  1.0  0.0  0.0  0.415072  0.0       0.0
+ 1.0  0.975042  0.0  0.0  0.0  0.0       0.0       0.0
+ 1.0  0.485075  0.0  1.0  0.0  0.0       0.485075  0.0
+ 1.0  0.542844  1.0  0.0  0.0  0.542844  0.0       0.0
 </pre>
 
 
@@ -1883,10 +1892,10 @@ Predictors:
 
 
 <pre class="output">
-&#40;&#91;-1.121223761104035, -1.9272411222634942, -0.5189157369725977, -0.36216418
-675719114, -0.3348441234810642&#93;, &#91;1.0 0.9616871509285982 … 0.0 0.0; 1.0 0.5
-734960282603385 … 0.0 0.0; … ; 1.0 0.20895535067664905 … 0.0 0.043662338576
-40138; 1.0 0.22440241469777966 … 0.0 0.0&#93;&#41;
+&#40;&#91;-1.1792956706381146, -0.40038061953493465, -2.1743636432356452, -0.089808
+88454433106, -0.3508347943014509&#93;, &#91;1.0 0.2568563742620089 … 0.0 0.0; 1.0 0
+.8580859902013884 … 0.0 0.0; … ; 1.0 0.2989550398201468 … 0.0 0.08937411583
+386556; 1.0 0.3795084943411997 … 0.0 0.0&#93;&#41;
 </pre>
 
 
@@ -1909,11 +1918,11 @@ true
 
 <pre class="output">
 5×12 Array&#123;Float64,2&#125;:
- 1.0  0.961687  0.924842   0.0  0.0  0.0  …  0.0       0.0        0.0
- 1.0  0.573496  0.328898   1.0  0.0  0.0     0.328898  0.0        0.0
- 1.0  0.247699  0.0613547  0.0  1.0  0.0     0.0       0.0613547  0.0
- 1.0  0.208955  0.0436623  0.0  0.0  1.0     0.0       0.0        0.0436623
- 1.0  0.224402  0.0503564  0.0  0.0  0.0     0.0       0.0        0.0
+ 1.0  0.256856  0.0659752  0.0  0.0  0.0  …  0.0       0.0        0.0
+ 1.0  0.858086  0.736312   1.0  0.0  0.0     0.736312  0.0        0.0
+ 1.0  0.276019  0.0761864  0.0  1.0  0.0     0.0       0.0761864  0.0
+ 1.0  0.298955  0.0893741  0.0  0.0  1.0     0.0       0.0        0.0893741
+ 1.0  0.379508  0.144027   0.0  0.0  0.0     0.0       0.0        0.0
 </pre>
 
 

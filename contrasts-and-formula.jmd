@@ -5,6 +5,15 @@ author: Dave Kleinschmidt
 date: 18 February 2020
 ---
 
+```julia
+using DataFrames, Pipe
+using MixedModels, GLM
+using LinearAlgebra, Statistics
+
+using StatsModels
+using StatsModels: pretty_mat
+```
+
 # Contrast coding
 
 ## What and why?
@@ -19,10 +28,6 @@ levels.
 For instance, let's look at the KB07 dataset:
 
 ```julia
-using DataFrames, Pipe
-using MixedModels, GLM
-using LinearAlgebra, Statistics
-
 kb07 = MixedModels.dataset(:kb07)
 first(kb07, 5)
 ```
@@ -40,7 +45,7 @@ Let's look at a few rows of the fixed effects design matrix that's
 generated for this model:
 
 ```julia
-Int.(mod.X)[1:5, :]
+pretty_mat(mod.X[1:5, :])
 ```
 
 A few things to note: all the values are 0 or 1, and there's one column
@@ -233,12 +238,14 @@ seq_diff_hyps = [-1  1  0  0
 ```
 
 These hypotheses correspond to the following *contrasts* (using the
+[`StatsModels.pretty_mat`](https://github.com/JuliaStats/StatsModels.jl/blob/master/src/contrasts.jl#L716-L723)
+function to make pretty fractions; this is based on
 [`rationalize`](https://docs.julialang.org/en/v1/base/math/#Base.rationalize)
-function to make pretty fractions, like the `fractions` function in R):
+function, which is like the `fractions` function in R):
 
 ```julia
 seq_diff_contrs = HypothesisCoding(seq_diff_hyps, levels = levels)
-rationalize.(seq_diff_contrs.contrasts, tol=1e-10)
+pretty_mat(seq_diff_contrs.contrasts)
 ```
 
 You can see that the contrasts for these hypothese are rather different!  It's
@@ -301,7 +308,7 @@ contr_hyp.hypotheses
 These hypotheses correspond to the following *contrasts*:
 
 ```julia
-rationalize.(contr_hyp.contrasts, tol=1e-10)
+pretty_mat(contr_hyp.contrasts)
 ```
 
 Notice how the ±1 coding in the hypotheses (which translates into the difference
@@ -342,7 +349,7 @@ And the resulting contrasts matrix:
 ```julia
 contr_helm_hyp = HypothesisCoding(helmert_hypotheses',
                                   levels=levels, labels=levels[2:end])
-contr_helm_hyp.contrasts
+pretty_mat(contr_helm_hyp.contrasts)
 ```
 
 Which is similar but not identical to the contrats matrix for HelmertCoding!  In
