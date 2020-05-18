@@ -1068,6 +1068,106 @@ spkr_prec: old-maintain  -530.131    54.4839    -9.73   &lt;1e-21
 </pre>
 
 
+<p>Let&#39;s see how you could generate custom contrasts for a number of different a priori hypotheses.</p>
+<h3>Example: Sequential differences coding</h3>
+<p>One hypothesis you might want to test is that the first condition is different from the second, the second from the third, the third from the fourth, etc. First we have to turn these hypotheses into a numeric form.  The null hypothesis that condition 1 is not different from condition 2 can be expressed by saying the difference between the two mean responses in these conditions is zero. Mathematically, we can write that as <span class="math">$\mu_2 - \mu_1 = 0$</span>, or equivalently:</p>
+<p class="math">\[
+-1 \cdot \mu_1 + 1 \cdot \mu_2 + 0 \cdot \mu_3 + ... + 0 \cdot \mu_n = 0
+\]</p>
+<p>The weights for each of the means are the entries in our hypothesis vector for this hypothesis.  So the first hypothesis vector is <code>&#91;-1, 1, 0, 0&#93;</code>.  Likewise, the second is <code>&#91;0, -1, 1, 0&#93;</code> &#40;<span class="math">$\mu_3 - \mu_2 = 0$</span>&#41;, and the third is <code>&#91;0, 0, -1, 1&#93;</code> &#40;<span class="math">$\mu_4 - \mu_3 = 0$</span>&#41;.  Putting these together we get:</p>
+
+
+<pre class='hljl'>
+<span class='hljl-n'>seq_diff_hyps</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-p'>[</span><span class='hljl-oB'>-</span><span class='hljl-ni'>1</span><span class='hljl-t'>  </span><span class='hljl-ni'>1</span><span class='hljl-t'>  </span><span class='hljl-ni'>0</span><span class='hljl-t'>  </span><span class='hljl-ni'>0</span><span class='hljl-t'>
+                  </span><span class='hljl-ni'>0</span><span class='hljl-t'> </span><span class='hljl-oB'>-</span><span class='hljl-ni'>1</span><span class='hljl-t'>  </span><span class='hljl-ni'>1</span><span class='hljl-t'>  </span><span class='hljl-ni'>0</span><span class='hljl-t'>
+                  </span><span class='hljl-ni'>0</span><span class='hljl-t'>  </span><span class='hljl-ni'>0</span><span class='hljl-t'> </span><span class='hljl-oB'>-</span><span class='hljl-ni'>1</span><span class='hljl-t'>  </span><span class='hljl-ni'>1</span><span class='hljl-p'>]</span>
+</pre>
+
+
+<pre class="output">
+3×4 Array&#123;Int64,2&#125;:
+ -1   1   0  0
+  0  -1   1  0
+  0   0  -1  1
+</pre>
+
+
+<p>These hypotheses correspond to the following <em>contrasts</em> &#40;using the <a href="https://docs.julialang.org/en/v1/base/math/#Base.rationalize"><code>rationalize</code></a> function to make pretty fractions, like the <code>fractions</code> function in R&#41;:</p>
+
+
+<pre class='hljl'>
+<span class='hljl-n'>seq_diff_contrs</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>HypothesisCoding</span><span class='hljl-p'>(</span><span class='hljl-n'>seq_diff_hyps</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>levels</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>levels</span><span class='hljl-p'>)</span><span class='hljl-t'>
+</span><span class='hljl-n'>rationalize</span><span class='hljl-oB'>.</span><span class='hljl-p'>(</span><span class='hljl-n'>seq_diff_contrs</span><span class='hljl-oB'>.</span><span class='hljl-n'>contrasts</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>tol</span><span class='hljl-oB'>=</span><span class='hljl-nfB'>1e-10</span><span class='hljl-p'>)</span>
+</pre>
+
+
+<pre class="output">
+4×3 Array&#123;Rational&#123;Int64&#125;,2&#125;:
+ -3//4  -1//2  -1//4
+  1//4  -1//2  -1//4
+  1//4   1//2  -1//4
+  1//4   1//2   3//4
+</pre>
+
+
+<p>You can see that the contrasts for these hypothese are rather different&#33;  It&#39;s not immediately obvious just looking at them how they&#39;re related &#40;at least not to me&#41;, which shows the power of hypothesis coding: you can work in a format that <em>does</em> make intuitive sense &#40;the weights assigned to each group&#39;s mean response&#41;.</p>
+<p>When we fit the model, we should see that the corresponding betas are the same as the differences between the cell means:</p>
+
+
+<pre class='hljl'>
+<span class='hljl-nf'>fit</span><span class='hljl-p'>(</span><span class='hljl-n'>MixedModel</span><span class='hljl-p'>,</span><span class='hljl-t'>
+    </span><span class='hljl-n'>f2</span><span class='hljl-p'>,</span><span class='hljl-t'>
+    </span><span class='hljl-n'>kb07ex</span><span class='hljl-p'>,</span><span class='hljl-t'>
+    </span><span class='hljl-n'>contrasts</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>Dict</span><span class='hljl-p'>(</span><span class='hljl-sc'>:spkr_prec</span><span class='hljl-t'> </span><span class='hljl-oB'>=&gt;</span><span class='hljl-t'> </span><span class='hljl-n'>seq_diff_contrs</span><span class='hljl-p'>))</span>
+</pre>
+
+
+<pre class="output">
+Linear mixed model fit by maximum likelihood
+ rt_trunc ~ 1 &#43; spkr_prec &#43; &#40;1 | subj&#41;
+     logLik        -2 logLik          AIC             BIC       
+ -1.45767208×10⁴  2.91534417×10⁴  2.91654417×10⁴  2.91983781×10⁴
+
+Variance components:
+            Column    Variance  Std.Dev. 
+subj     &#40;Intercept&#41;   95885.39 309.65366
+Residual              662657.47 814.03776
+ Number of obs: 1789; levels of grouping factors: 56
+
+  Fixed-effects parameters:
+──────────────────────────────────────────────────────────────
+                         Estimate  Std.Error  z value  P&#40;&gt;|z|&#41;
+──────────────────────────────────────────────────────────────
+&#40;Intercept&#41;              2181.94     45.6362    47.81   &lt;1e-99
+spkr_prec: new-maintain  -623.347    54.4214   -11.45   &lt;1e-29
+spkr_prec: old-break      803.339    54.3902    14.77   &lt;1e-48
+spkr_prec: old-maintain  -710.123    54.4527   -13.04   &lt;1e-38
+──────────────────────────────────────────────────────────────
+</pre>
+
+
+<p>Calculating the cell mean differences manually:</p>
+
+
+<pre class='hljl'>
+<span class='hljl-n'>cell_means</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nd'>@pipe</span><span class='hljl-t'> </span><span class='hljl-n'>kb07ex</span><span class='hljl-t'> </span><span class='hljl-oB'>|&gt;</span><span class='hljl-t'>
+    </span><span class='hljl-nf'>groupby</span><span class='hljl-p'>(</span><span class='hljl-n'>_</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:spkr_prec</span><span class='hljl-p'>)</span><span class='hljl-t'> </span><span class='hljl-oB'>|&gt;</span><span class='hljl-t'>
+    </span><span class='hljl-nf'>combine</span><span class='hljl-p'>(</span><span class='hljl-n'>_</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:rt_trunc</span><span class='hljl-t'> </span><span class='hljl-oB'>=&gt;</span><span class='hljl-t'> </span><span class='hljl-n'>mean</span><span class='hljl-t'> </span><span class='hljl-oB'>=&gt;</span><span class='hljl-t'> </span><span class='hljl-sc'>:mean_rt</span><span class='hljl-p'>)</span><span class='hljl-t'> </span><span class='hljl-oB'>|&gt;</span><span class='hljl-t'>
+    </span><span class='hljl-nf'>innerjoin</span><span class='hljl-p'>(</span><span class='hljl-nf'>DataFrame</span><span class='hljl-p'>(</span><span class='hljl-n'>spkr_prec</span><span class='hljl-oB'>=</span><span class='hljl-n'>levels</span><span class='hljl-p'>),</span><span class='hljl-t'> </span><span class='hljl-n'>_</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>on</span><span class='hljl-oB'>=:</span><span class='hljl-n'>spkr_prec</span><span class='hljl-p'>)</span><span class='hljl-t'>  </span><span class='hljl-cs'># make sure ordering is right</span><span class='hljl-t'>
+</span><span class='hljl-nf'>diff</span><span class='hljl-p'>(</span><span class='hljl-n'>cell_means</span><span class='hljl-oB'>.</span><span class='hljl-n'>mean_rt</span><span class='hljl-p'>)</span><span class='hljl-t'>                                      </span><span class='hljl-cs'># compare with betas above...</span>
+</pre>
+
+
+<pre class="output">
+3-element Array&#123;Float64,1&#125;:
+ -623.465254474273
+  803.3392857142858
+ -709.9560177770661
+</pre>
+
+
+<p>Note that the intercept corresponds to the <em>grand mean</em>, not to the first level&#39;s mean&#33;  That&#39;s because the hypothesis vectors are <em>zero-mean</em>, so they don&#39;t affect the hypothesis for the intercept &#40;as long as the design is balanced&#41;.</p>
+<h3>Example: custom, a priori hypotheses</h3>
 <p>Let&#39;s say we want to test whether the effect of <code>:prec</code> depends on whether <code>:spkr</code> is old vs. new. We need one contrast to test the hypothesis that <code>&quot;maintain&quot; &#33;&#61; &quot;break&quot;</code> for &quot;new&quot;, and another for &quot;old&quot;. That leaves one over, to test the overall difference between &quot;new&quot; and &quot;old&quot;.</p>
 
 
@@ -1131,7 +1231,7 @@ spkr_prec: old-maintain  -530.131    54.4839    -9.73   &lt;1e-21
 </pre>
 
 
-<p>These hypotheses correspond to the following <em>contrasts</em> &#40;using the <a href="https://docs.julialang.org/en/v1/base/math/#Base.rationalize"><code>rationalize</code></a> function to make pretty fractions, like the <code>fractions</code> function in R&#41;:</p>
+<p>These hypotheses correspond to the following <em>contrasts</em>:</p>
 
 
 <pre class='hljl'>
@@ -1451,7 +1551,7 @@ true
 
 
 
-<table class="data-frame"><thead><tr><th></th><th>y</th><th>a</th><th>b</th></tr><tr><th></th><th>Float64</th><th>Float64</th><th>Symbol</th></tr></thead><tbody><p>5 rows × 3 columns</p><tr><th>1</th><td>0.106767</td><td>0.562864</td><td>Q</td></tr><tr><th>2</th><td>0.212387</td><td>0.819632</td><td>R</td></tr><tr><th>3</th><td>0.840423</td><td>0.625515</td><td>S</td></tr><tr><th>4</th><td>0.602282</td><td>0.795414</td><td>T</td></tr><tr><th>5</th><td>0.452095</td><td>0.582799</td><td>Q</td></tr></tbody></table>
+<table class="data-frame"><thead><tr><th></th><th>y</th><th>a</th><th>b</th></tr><tr><th></th><th>Float64</th><th>Float64</th><th>Symbol</th></tr></thead><tbody><p>5 rows × 3 columns</p><tr><th>1</th><td>0.325881</td><td>0.961687</td><td>Q</td></tr><tr><th>2</th><td>0.145549</td><td>0.573496</td><td>R</td></tr><tr><th>3</th><td>0.595166</td><td>0.247699</td><td>S</td></tr><tr><th>4</th><td>0.696168</td><td>0.208955</td><td>T</td></tr><tr><th>5</th><td>0.71545</td><td>0.224402</td><td>Q</td></tr></tbody></table>
 
 <p>We can extract a <code>Schema</code>:</p>
 
@@ -1587,11 +1687,11 @@ ERROR: KeyError: key argle_bargle not found
 <pre class="output">
 6×3 Array&#123;Float64,2&#125;:
  0.0       0.0       0.0
- 0.819632  0.0       0.0
- 0.0       0.625515  0.0
- 0.0       0.0       0.795414
+ 0.573496  0.0       0.0
+ 0.0       0.247699  0.0
+ 0.0       0.0       0.208955
  0.0       0.0       0.0
- 0.346918  0.0       0.0
+ 0.492603  0.0       0.0
 </pre>
 
 
@@ -1618,11 +1718,11 @@ t_ab_concrete_formula &#61; f_concrete.rhs.terms&#91;end&#93; &#61; a &amp; b
 <pre class="output">
 6×3 Array&#123;Float64,2&#125;:
  0.0       0.0       0.0
- 0.819632  0.0       0.0
- 0.0       0.625515  0.0
- 0.0       0.0       0.795414
+ 0.573496  0.0       0.0
+ 0.0       0.247699  0.0
+ 0.0       0.0       0.208955
  0.0       0.0       0.0
- 0.346918  0.0       0.0
+ 0.492603  0.0       0.0
 </pre>
 
 
@@ -1637,12 +1737,12 @@ t_ab_concrete_formula &#61; f_concrete.rhs.terms&#91;end&#93; &#61; a &amp; b
 
 <pre class="output">
 6×8 Array&#123;Float64,2&#125;:
- 1.0  0.562864  0.0  0.0  0.0  0.0       0.0       0.0
- 1.0  0.819632  1.0  0.0  0.0  0.819632  0.0       0.0
- 1.0  0.625515  0.0  1.0  0.0  0.0       0.625515  0.0
- 1.0  0.795414  0.0  0.0  1.0  0.0       0.0       0.795414
- 1.0  0.582799  0.0  0.0  0.0  0.0       0.0       0.0
- 1.0  0.346918  1.0  0.0  0.0  0.346918  0.0       0.0
+ 1.0  0.961687  0.0  0.0  0.0  0.0       0.0       0.0
+ 1.0  0.573496  1.0  0.0  0.0  0.573496  0.0       0.0
+ 1.0  0.247699  0.0  1.0  0.0  0.0       0.247699  0.0
+ 1.0  0.208955  0.0  0.0  1.0  0.0       0.0       0.208955
+ 1.0  0.224402  0.0  0.0  0.0  0.0       0.0       0.0
+ 1.0  0.492603  1.0  0.0  0.0  0.492603  0.0       0.0
 </pre>
 
 
@@ -1658,11 +1758,11 @@ t_ab_concrete_formula &#61; f_concrete.rhs.terms&#91;end&#93; &#61; a &amp; b
 
 <pre class="output">
 5×8 Array&#123;Float64,2&#125;:
- 1.0  0.156791  1.0  0.0  0.0  0.156791  0.0       0.0
- 1.0  0.24588   1.0  0.0  0.0  0.24588   0.0       0.0
- 1.0  0.450352  0.0  0.0  0.0  0.0       0.0       0.0
- 1.0  0.751326  0.0  1.0  0.0  0.0       0.751326  0.0
- 1.0  0.083372  1.0  0.0  0.0  0.083372  0.0       0.0
+ 1.0  0.947003  1.0  0.0  0.0  0.947003  0.0       0.0
+ 1.0  0.946075  1.0  0.0  0.0  0.946075  0.0       0.0
+ 1.0  0.354676  0.0  0.0  0.0  0.0       0.0       0.0
+ 1.0  0.448929  0.0  1.0  0.0  0.0       0.448929  0.0
+ 1.0  0.758199  1.0  0.0  0.0  0.758199  0.0       0.0
 </pre>
 
 
@@ -1783,10 +1883,10 @@ Predictors:
 
 
 <pre class="output">
-&#40;&#91;-2.237104038448844, -1.549344781316065, -0.17385009770434118, -0.50702901
-7392557, -0.7938640163947353&#93;, &#91;1.0 0.5628636866602872 … 0.0 0.0; 1.0 0.819
-6316978488305 … 0.0 0.0; … ; 1.0 0.7954143523481547 … 0.0 0.632683991921434
-4; 1.0 0.5827990109499359 … 0.0 0.0&#93;&#41;
+&#40;&#91;-1.121223761104035, -1.9272411222634942, -0.5189157369725977, -0.36216418
+675719114, -0.3348441234810642&#93;, &#91;1.0 0.9616871509285982 … 0.0 0.0; 1.0 0.5
+734960282603385 … 0.0 0.0; … ; 1.0 0.20895535067664905 … 0.0 0.043662338576
+40138; 1.0 0.22440241469777966 … 0.0 0.0&#93;&#41;
 </pre>
 
 
@@ -1809,11 +1909,11 @@ true
 
 <pre class="output">
 5×12 Array&#123;Float64,2&#125;:
- 1.0  0.562864  0.316816  0.0  0.0  0.0  …  0.0       0.0       0.0
- 1.0  0.819632  0.671796  1.0  0.0  0.0     0.671796  0.0       0.0
- 1.0  0.625515  0.391269  0.0  1.0  0.0     0.0       0.391269  0.0
- 1.0  0.795414  0.632684  0.0  0.0  1.0     0.0       0.0       0.632684
- 1.0  0.582799  0.339655  0.0  0.0  0.0     0.0       0.0       0.0
+ 1.0  0.961687  0.924842   0.0  0.0  0.0  …  0.0       0.0        0.0
+ 1.0  0.573496  0.328898   1.0  0.0  0.0     0.328898  0.0        0.0
+ 1.0  0.247699  0.0613547  0.0  1.0  0.0     0.0       0.0613547  0.0
+ 1.0  0.208955  0.0436623  0.0  0.0  1.0     0.0       0.0        0.0436623
+ 1.0  0.224402  0.0503564  0.0  0.0  0.0     0.0       0.0        0.0
 </pre>
 
 
@@ -1954,7 +2054,7 @@ load: yes     156.884    41.6655     3.77   0.0002
           <div class="footer"><p>
           Published from <a href="contrasts-and-formula.jmd">contrasts-and-formula.jmd</a> using
           <a href="http://github.com/mpastell/Weave.jl">Weave.jl</a>
-           on 2020-05-17.
+           on 2020-05-18.
           <p></div>
 
 

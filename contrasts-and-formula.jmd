@@ -205,6 +205,75 @@ Here's the model fit with the default (dummy/treatment-coded contrasts):
 mod4 = fit(MixedModel, f2, kb07ex)
 ```
 
+Let's see how you could generate custom contrasts for a number of different a
+priori hypotheses.
+
+### Example: Sequential differences coding
+
+One hypothesis you might want to test is that the first condition is different
+from the second, the second from the third, the third from the fourth, etc.
+First we have to turn these hypotheses into a numeric form.  The null hypothesis
+that condition 1 is not different from condition 2 can be expressed by saying
+the difference between the two mean responses in these conditions is zero.
+Mathematically, we can write that as ``\mu_2 - \mu_1 = 0``, or equivalently:
+
+```math
+-1 \cdot \mu_1 + 1 \cdot \mu_2 + 0 \cdot \mu_3 + ... + 0 \cdot \mu_n = 0
+```
+
+The weights for each of the means are the entries in our hypothesis vector for
+this hypothesis.  So the first hypothesis vector is `[-1, 1, 0, 0]`.  Likewise,
+the second is `[0, -1, 1, 0]` (``\mu_3 - \mu_2 = 0``), and the third is `[0, 0,
+-1, 1]` (``\mu_4 - \mu_3 = 0``).  Putting these together we get:
+
+```julia
+seq_diff_hyps = [-1  1  0  0
+                  0 -1  1  0
+                  0  0 -1  1]
+```
+
+These hypotheses correspond to the following *contrasts* (using the
+[`rationalize`](https://docs.julialang.org/en/v1/base/math/#Base.rationalize)
+function to make pretty fractions, like the `fractions` function in R):
+
+```julia
+seq_diff_contrs = HypothesisCoding(seq_diff_hyps, levels = levels)
+rationalize.(seq_diff_contrs.contrasts, tol=1e-10)
+```
+
+You can see that the contrasts for these hypothese are rather different!  It's
+not immediately obvious just looking at them how they're related (at least not
+to me), which shows the power of hypothesis coding: you can work in a format
+that *does* make intuitive sense (the weights assigned to each group's mean
+response).
+
+When we fit the model, we should see that the corresponding betas are the same
+as the differences between the cell means:
+
+```julia
+fit(MixedModel,
+    f2,
+    kb07ex,
+    contrasts = Dict(:spkr_prec => seq_diff_contrs))
+```
+
+Calculating the cell mean differences manually:
+
+```julia
+cell_means = @pipe kb07ex |>
+    groupby(_, :spkr_prec) |>
+    combine(_, :rt_trunc => mean => :mean_rt) |>
+    innerjoin(DataFrame(spkr_prec=levels), _, on=:spkr_prec)  # make sure ordering is right
+diff(cell_means.mean_rt)                                      # compare with betas above...
+```
+
+Note that the intercept corresponds to the *grand mean*, not to the first
+level's mean!  That's because the hypothesis vectors are *zero-mean*, so they
+don't affect the hypothesis for the intercept (as long as the design is
+balanced).
+
+### Example: custom, a priori hypotheses
+
 Let's say we want to test whether the effect of `:prec` depends on
 whether `:spkr` is old vs. new. We need one contrast to test the
 hypothesis that `"maintain" != "break"` for "new", and another for
@@ -229,9 +298,7 @@ contr_hyp = HypothesisCoding(hcat(old_new, prec_old, prec_new)',
 contr_hyp.hypotheses
 ```
 
-These hypotheses correspond to the following *contrasts* (using the
-[`rationalize`](https://docs.julialang.org/en/v1/base/math/#Base.rationalize)
-function to make pretty fractions, like the `fractions` function in R):
+These hypotheses correspond to the following *contrasts*:
 
 ```julia
 rationalize.(contr_hyp.contrasts, tol=1e-10)
@@ -255,6 +322,7 @@ mod6 = fit(MixedModel,
            contrasts = Dict(:spkr => EffectsCoding(base="new"),
                             :prec => EffectsCoding(base="maintain")))
 ```
+
 
 ### Example: Helmert contrasts that actually make sense
 
