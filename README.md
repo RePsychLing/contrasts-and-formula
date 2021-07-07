@@ -9,3 +9,7 @@ Julia.
 
 There's also a [Jupyter notebook](contrasts-and-formula.ipynb) you can download
 and run, and a [Julia-markdown source](contrasts-and-formula.jmd) for both
+
+## Acknowledgements
+
+This work was supported by the Center for Interdisciplinary Research, Bielefeld (ZiF) Cooperation Group "Statistical models for psychological and linguistic data".
